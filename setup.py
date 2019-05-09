@@ -12,7 +12,9 @@ setuptools.setup(
       "pandas==0.24.2",
       "psycopg2-binary==2.8.1",
       "influxdb==5.2.2"
-    ]
+    ],
+    description='For AFS developer to access Datasource',
+    keywords=['AFS']
 )
 
 # python setup.py bdist_wheel
