@@ -1,0 +1,12 @@
+.vscode/
+build/
+config/
+dist/
+env/
+importCSVtoInflux.py
+importCSVtoMongo.py
+importCSVtoPg.py
+main.py
+run.bat
+test.py
+*/__pycache__
