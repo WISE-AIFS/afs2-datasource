@@ -14,19 +14,24 @@ class MongoHelper():
     if not collection:
       raise AttributeError('No collection in data')
     self._collection = collection
+    self._db = ''
     self._connection = None
 
   def connect(self, username, password, host, port, database):
     uri = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(username=username, password=password, host=host, port=port, database=database)
-    connection = MongoClient(uri, serverSelectionTimeoutMS=const.DB_CONNECTION_TIMEOUT)
-    connection.server_info()
-    db = connection[database]
-    if self._collection not in db.list_collection_names():
-      raise AttributeError('collection: {} is not exist in database'.format(self._collection))
-    self._connection = db[self._collection]
+    if self._connection is None:
+      self._connection = MongoClient(uri, serverSelectionTimeoutMS=const.DB_CONNECTION_TIMEOUT)
+      self._connection.server_info()
+      self._db = database
   
+  def disconnect(self):
+    if self._connection:
+      self._connection.close()
+      self._connection = None
+      self._db = ''
+
   def execute_query(self, querySql):
-    data = list(self._connection.find(querySql, {'_id': 0}))
+    data = list(self._connection[self._db][self._collection].find(querySql, {'_id': 0}))
     data = pd.DataFrame(data=data)
     return data
 
@@ -37,3 +42,14 @@ class MongoHelper():
     except:
       raise ValueError('querySql is invalid')
     return querySql
+
+  def is_table_exist(self, table_name):
+    return table_name in self._connection[self._db].list_collection_names()
+
+  def create_table(self, table_name, columns):
+    self._connection[self._db].create_collection(table_name)
+
+  def insert(self, table_name, columns, records):
+    records = list(map(lambda record: dict(zip(columns, record)), records))
+    result = self._connection[self._db][table_name].insert_many(records)
+    print(result.inserted_ids)

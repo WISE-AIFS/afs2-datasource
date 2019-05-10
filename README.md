@@ -60,3 +60,13 @@ data = manager.execute_query()
 
 ```
 
+## API List
++ connect()
++ disconnect()
++ is_connected()
++ is_connecting()
++ get_dbtype()
++ execute_query()
++ create_table(table_name, columns)
++ is_table_exist(table_name)
++ insert(table_name, columns, records)
