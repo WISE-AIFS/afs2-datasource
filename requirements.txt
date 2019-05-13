@@ -1,0 +1,4 @@
+pymongo==3.7.2
+pandas==0.24.2
+psycopg2-binary==2.8.1
+influxdb==5.2.2
