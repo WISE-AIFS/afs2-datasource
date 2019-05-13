@@ -10,9 +10,7 @@ class MongoHelper():
     if type(dataDir) is str:
       dataDir = json.loads(dataDir)
     data = dataDir.get('data', {})
-    collection = data.get('collection', None)
-    if not collection:
-      raise AttributeError('No collection in data')
+    collection = data.get('collection', '')
     self._collection = collection
     self._db = ''
     self._connection = None
@@ -31,6 +29,8 @@ class MongoHelper():
       self._db = ''
 
   def execute_query(self, querySql):
+    if not self._collection:
+      raise AttributeError('No collection in data')
     data = list(self._connection[self._db][self._collection].find(querySql, {'_id': 0}))
     data = pd.DataFrame(data=data)
     return data
