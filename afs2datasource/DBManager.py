@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 import afs2datasource.utils as utils
 import afs2datasource.constant as const
 import afs2datasource.mongoHelper as mongoHelper
@@ -94,6 +95,7 @@ class DBManager:
       raise RuntimeError('No connection.')
     if not self._helper.is_table_exist(table_name) and self._dbType != const.DB_TYPE['INFLUXDB']:
       raise ValueError('table_name is not exist')
+    records = [[None if pd.isnull(value) else value for value in record] for record in records]
     self._helper.insert(table_name, columns, records)
 
   def _check_columns(self, col):
