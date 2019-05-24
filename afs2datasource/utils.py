@@ -12,29 +12,31 @@ def get_credential_from_uri(uri):
   database = result[4]
   return username, password, host, port, database
 
-def get_credential(data):
-  dbType = data.get('dbType', None)
+def get_credential_from_dataDir(data):
   credential = data.get('credential', None)
   if credential:
-    username = credential.get('username', None)
-    password = credential.get('password', None)
-    host = credential.get('host', None)
-    port = credential.get('port', None)
-    database = credential.get('database', None)
-    if username is None:
-      raise AttributeError('No username in credential')
-    if password is None:
-      raise AttributeError('No password in credential')
-    if host is None:
-      raise AttributeError('No host in credential')
-    if port is None:
-      raise AttributeError('No port in credential')
-    if database is None:
-      raise AttributeError('No database in credential')
-    # print(username, password, host, port, database)
-    return username, password, host, port, database
+    return get_credential(credential)
   else:
     uri = data.get('externalUrl', None)
     if not uri:
       raise AttributeError('No externalUrl in dataDir[data]')
     return get_credential_from_uri(uri)
+
+def get_credential(credential):
+  username = credential.get('username', None)
+  password = credential.get('password', None)
+  host = credential.get('host', None)
+  port = credential.get('port', None)
+  database = credential.get('database', None)
+  if username is None:
+    raise AttributeError('No username in credential')
+  if password is None:
+    raise AttributeError('No password in credential')
+  if host is None:
+    raise AttributeError('No host in credential')
+  if port is None:
+    raise AttributeError('No port in credential')
+  if database is None:
+    raise AttributeError('No database in credential')
+  # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
+  return username, password, host, port, database
