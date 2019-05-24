@@ -18,7 +18,7 @@ export PAI_DATA_DIR="{"type": "mongo-firehose","data": {"dbType": "internal","qu
 
 Export database config via Python
 ```python
-os.environ['PAI_DATA_DIR'] = {
+os.environ['PAI_DATA_DIR'] = """{
     "type": "mongo-firehose",
     "data": {
       "dbType": "internal",
@@ -33,6 +33,7 @@ os.environ['PAI_DATA_DIR'] = {
       }
     }
   }
+  """
 ```
 
 ### DBManager Example
@@ -44,6 +45,10 @@ manager = DBManager()
 
 # Connect DB
 manager.connect()
+
+# Check the status of connection
+is_connected = manager.is_connected()
+# Return type: boolean
 
 # Execute querySql in DB config
 data = manager.execute_query()
@@ -57,6 +62,29 @@ data = manager.execute_query()
 4    35.0    7.0       2.0    8.0500  ...  1.0       0.0         36.0     2.0
 ...
 """
+
+# Check is the table is exist
+table_name = 'titanic'
+manager.is_table_exist(table_name)
+# Return type: boolean
+
+# Create Table
+columns = [
+  {'name': 'index', 'type': 'INTEGER', 'is_not_null': True},
+  {'name': 'survived', 'type': 'FLOAT'},
+  {'name': 'age', 'type': 'FLOAT'},
+  {'name': 'embarked', 'type': 'INTEGER'},
+  {'name': 'fare', 'type': 'FLOAT'},
+  {'name': 'pclass', 'type': 'INTEGER'},
+  {'name': 'sex', 'type': 'INTEGER'},
+  {'name': 'title2', 'type': 'INTEGER'},
+  {'name': 'ticket_info', 'type': 'INTEGER'},
+  {'name': 'cabin', 'type': 'INTEGER'}
+]
+manager.create_table(table_name=table_name, columns=columns)
+
+# Disconnect to DB
+manager.disconnect()
 
 ```
 
