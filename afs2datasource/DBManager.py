@@ -8,10 +8,29 @@ import afs2datasource.postgresHelper as postgresHelper
 import afs2datasource.influxHelper as influxHelper
 
 class DBManager:
-  def __init__(self):
+  def __init__(self, config=None):
     dataDir = os.getenv('PAI_DATA_DIR', None)
-    if not dataDir:
-      raise AttributeError('No dataDir')
+    if dataDir:
+      self._get_credential_from_env(dataDir)
+    elif config:
+      self._get_credential_from_config(config)
+    else:
+      raise ValueError('No DB config.')
+    self._status = const.DB_STATUS['DISCONNECTED']
+    self._helper = self._create_helper(self._dbType)
+
+  def _get_credential_from_config(self, config):
+    db_type = config.get('db_type', None)
+    if not db_type:
+      raise AttributeError('No db_type in config')
+    if db_type not in const.DB_TYPE.values():
+      raise ValueError('{0} is not support'.format(db_type))
+    querySql = config.get('querySql', None)
+    self._username, self._password, self._host, self._port, self._database = utils.get_credential(config)
+    self._dbType = db_type
+    self._querySql = querySql
+
+  def _get_credential_from_env(self, dataDir):
     if type(dataDir) is str:
       dataDir = json.loads(dataDir)
     dbType = dataDir.get('type', None)
@@ -23,9 +42,7 @@ class DBManager:
     querySql = data.get('querySql', None)
     if not querySql and not(type(querySql) is dict):
       raise AttributeError('No querySql in dataDir[data]')
-    self._status = const.DB_STATUS['DISCONNECTED']
-    self._username, self._password, self._host, self._port, self._database = utils.get_credential(data)
-    self._helper = self._create_helper(dbType)
+    self._username, self._password, self._host, self._port, self._database = utils.get_credential_from_dataDir(data)
     self._dbType = dbType
     self._querySql = querySql
 
