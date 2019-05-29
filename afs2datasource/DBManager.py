@@ -27,6 +27,7 @@ class DBManager:
       raise ValueError('{0} is not support'.format(db_type))
     querySql = config.get('querySql', None)
     self._username, self._password, self._host, self._port, self._database = utils.get_credential(config)
+    self._collection = config.get('collection', '')
     self._dbType = db_type
     self._querySql = querySql
 
@@ -43,13 +44,14 @@ class DBManager:
     if not querySql and not(type(querySql) is dict):
       raise AttributeError('No querySql in dataDir[data]')
     self._username, self._password, self._host, self._port, self._database = utils.get_credential_from_dataDir(data)
+    self._collection = data.get('collection', '')
     self._dbType = dbType
     self._querySql = querySql
 
   def _create_helper(self, dbType):
     dbType = dbType.lower()
     if dbType == const.DB_TYPE['MONGODB']:
-      return mongoHelper.MongoHelper()
+      return mongoHelper.MongoHelper(self._collection)
     elif dbType == const.DB_TYPE['POSTGRES']:
       return postgresHelper.PostgresHelper()
     elif dbType == const.DB_TYPE['INFLUXDB']:

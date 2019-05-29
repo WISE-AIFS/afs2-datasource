@@ -5,12 +5,7 @@ from pymongo import MongoClient, errors
 import pandas as pd
 
 class MongoHelper():
-  def __init__(self):
-    dataDir = os.getenv('PAI_DATA_DIR', {})
-    if type(dataDir) is str:
-      dataDir = json.loads(dataDir)
-    data = dataDir.get('data', {})
-    collection = data.get('collection', '')
+  def __init__(self, collection=''):
     self._collection = collection
     self._db = ''
     self._connection = None
@@ -25,6 +20,7 @@ class MongoHelper():
   def disconnect(self):
     if self._connection:
       self._connection.close()
+      self._collection = ''
       self._connection = None
       self._db = ''
 
