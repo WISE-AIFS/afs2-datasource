@@ -12,7 +12,7 @@ class PostgresHelper():
   def connect(self):
     if self._connection is None:
       data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential(data)
+      username, password, host, port, database = utils.get_credential_from_dataDir(data)
       self._connection = psycopg2.connect(database=database, user=username, password=password, host=host, port=port)
       self._username = username
   

@@ -14,7 +14,7 @@ class MongoHelper():
   def connect(self):
     if self._connection is None:
       data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential(data)
+      username, password, host, port, database = utils.get_credential_from_dataDir(data)
       uri = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(username=username, password=password, host=host, port=port, database=database)
       self._connection = MongoClient(uri, serverSelectionTimeoutMS=const.DB_CONNECTION_TIMEOUT)
       self._connection.server_info()

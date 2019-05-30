@@ -12,7 +12,7 @@ class InfluxHelper():
   def connect(self):
     if self._connection is None:
       data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential(data)
+      username, password, host, port, database = utils.get_credential_from_dataDir(data)
       self._connection = InfluxDBClient(database=database, username=username, password=password, host=host, port=port)
   
   def disconnect(self):
