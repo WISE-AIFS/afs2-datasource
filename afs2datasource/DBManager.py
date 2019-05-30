@@ -8,12 +8,12 @@ import afs2datasource.postgresHelper as postgresHelper
 import afs2datasource.influxHelper as influxHelper
 
 class DBManager:
-  def __init__(self, config=None):
+  def __init__(self, **config):
+    if config:
+      self._get_credential_from_config(config)
     dataDir = os.getenv('PAI_DATA_DIR', None)
     if dataDir:
       self._get_credential_from_env(dataDir)
-    elif config:
-      self._get_credential_from_config(config)
     else:
       raise ValueError('No DB config.')
     self._status = const.DB_STATUS['DISCONNECTED']
@@ -21,15 +21,28 @@ class DBManager:
 
   def _get_credential_from_config(self, config):
     db_type = config.get('db_type', None)
-    if not db_type:
-      raise AttributeError('No db_type in config')
-    if db_type not in const.DB_TYPE.values():
-      raise ValueError('{0} is not support'.format(db_type))
+    username = config.get('username', None)
+    password = config.get('password', None)
+    host = config.get('host', None)
+    port = config.get('port', None)
+    database = config.get('database', None)
     querySql = config.get('querySql', None)
-    self._username, self._password, self._host, self._port, self._database = utils.get_credential(config)
-    self._collection = config.get('collection', '')
-    self._dbType = db_type
-    self._querySql = querySql
+    collection = config.get('collection', None)
+    dataDir = {
+      'type': db_type,
+      'data': {
+        'collection': collection,
+        'querySql': querySql,
+        'credential': {
+          'username': username,
+          'password': password,
+          'host': host,
+          'port': port,
+          'database': database
+        }
+      }
+    }
+    os.environ['PAI_DATA_DIR'] = json.dumps(dataDir)
 
   def _get_credential_from_env(self, dataDir):
     if type(dataDir) is str:

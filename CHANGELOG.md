@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.1.17] - 2019-05-30
+### Added
+- Init DBManager with local config
+
 ## [2.1.15] - 2019-05-16
 ### Added
 - DBManager
