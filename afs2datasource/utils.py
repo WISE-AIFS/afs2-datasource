@@ -1,4 +1,13 @@
 import re
+import os
+import json
+
+def get_data_from_dataDir():
+  dataDir = os.getenv('PAI_DATA_DIR', {})
+  if type(dataDir) is str:
+    dataDir = json.loads(dataDir)
+  data = dataDir.get('data', {})
+  return data
 
 def get_credential_from_uri(uri):
   uri_pattern = r'^(.*):\/\/(.*):(.*)@(.*)\/(.*)$'
@@ -40,3 +49,18 @@ def get_credential(credential):
     raise AttributeError('No database in credential')
   # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
   return username, password, host, port, database
+def get_s3_credential(data):
+  end_point = data.get('endPoint', None)
+  access_key = data.get('accessKey', None)
+  secret_key = data.get('secretAccessKey', None)
+  bucket = data.get('bucketName', None)
+  if not end_point:
+    raise AttributeError('No endPoint in credential')
+  if not access_key:
+    raise AttributeError('No accessKey in credential')
+  if not secret_key:
+    raise AttributeError('No secretAccessKey in credential')
+  if not bucket:
+    raise AttributeError('No bucketName in credential')
+  return end_point, access_key, secret_key, bucket
+

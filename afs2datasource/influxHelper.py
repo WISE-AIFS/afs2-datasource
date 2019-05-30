@@ -7,13 +7,12 @@ import pandas as pd
 
 class InfluxHelper():
   def __init__(self):
-    dataDir = os.getenv('PAI_DATA_DIR', {})
-    if type(dataDir) is str:
-      dataDir = json.loads(dataDir)
     self._connection = None
 
-  def connect(self, username, password, host, port, database):
+  def connect(self):
     if self._connection is None:
+      data = utils.get_data_from_dataDir()
+      username, password, host, port, database = utils.get_credential(data)
       self._connection = InfluxDBClient(database=database, username=username, password=password, host=host, port=port)
   
   def disconnect(self):

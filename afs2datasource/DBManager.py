@@ -1,11 +1,7 @@
 import os
 import json
 import pandas as pd
-import afs2datasource.utils as utils
 import afs2datasource.constant as const
-import afs2datasource.mongoHelper as mongoHelper
-import afs2datasource.postgresHelper as postgresHelper
-import afs2datasource.influxHelper as influxHelper
 
 class DBManager:
   def __init__(self, **config):
@@ -56,19 +52,25 @@ class DBManager:
     querySql = data.get('querySql', None)
     if not querySql and not(type(querySql) is dict):
       raise AttributeError('No querySql in dataDir[data]')
-    self._username, self._password, self._host, self._port, self._database = utils.get_credential_from_dataDir(data)
-    self._collection = data.get('collection', '')
+    self._status = const.DB_STATUS['DISCONNECTED']
+    self._helper = self._create_helper(dbType)
     self._dbType = dbType
     self._querySql = querySql
 
   def _create_helper(self, dbType):
     dbType = dbType.lower()
     if dbType == const.DB_TYPE['MONGODB']:
-      return mongoHelper.MongoHelper(self._collection)
+      import afs2datasource.mongoHelper as mongoHelper
+      return mongoHelper.MongoHelper()
     elif dbType == const.DB_TYPE['POSTGRES']:
+      import afs2datasource.postgresHelper as postgresHelper
       return postgresHelper.PostgresHelper()
     elif dbType == const.DB_TYPE['INFLUXDB']:
+      import afs2datasource.influxHelper as influxHelper
       return influxHelper.InfluxHelper()
+    elif dbType == const.DB_TYPE['S3']:
+      import afs2datasource.s3Helper as s3Helper
+      return s3Helper.s3Helper()
     else:
       return None
 
@@ -77,7 +79,7 @@ class DBManager:
       if self.is_connected() or self.is_connecting():
         return
       self._status = const.DB_STATUS['CONNECTING']
-      self._helper.connect(self._username, self._password, self._host, self._port, self._database)
+      self._helper.connect()
       self._status = const.DB_STATUS['CONNECTED']
     except Exception as ex:
       self._status = const.DB_STATUS['DISCONNECTED']

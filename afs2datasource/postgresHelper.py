@@ -1,20 +1,18 @@
-import os
-import json
 import afs2datasource.constant as const
+import afs2datasource.utils as utils
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
 
 class PostgresHelper():
   def __init__(self):
-    dataDir = os.getenv('PAI_DATA_DIR', {})
-    if type(dataDir) is str:
-      dataDir = json.loads(dataDir)
     self._connection = None
     self._username = ''
 
-  def connect(self, username, password, host, port, database):
+  def connect(self):
     if self._connection is None:
+      data = utils.get_data_from_dataDir()
+      username, password, host, port, database = utils.get_credential(data)
       self._connection = psycopg2.connect(database=database, user=username, password=password, host=host, port=port)
       self._username = username
   
@@ -35,7 +33,6 @@ class PostgresHelper():
   def check_query(self, querySql):
     if type(querySql) is not str:
       raise ValueError('querySql is invalid')
-    # utils.check_sql(querySql)
     return querySql
 
   def is_table_exist(self, table_name):

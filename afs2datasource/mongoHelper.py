@@ -1,21 +1,25 @@
 import os
 import json
 import afs2datasource.constant as const
+import afs2datasource.utils as utils
 from pymongo import MongoClient, errors
 import pandas as pd
 
 class MongoHelper():
-  def __init__(self, collection=''):
-    self._collection = collection
+  def __init__(self):
     self._db = ''
+    self._collection = ''
     self._connection = None
 
-  def connect(self, username, password, host, port, database):
-    uri = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(username=username, password=password, host=host, port=port, database=database)
+  def connect(self):
     if self._connection is None:
+      data = utils.get_data_from_dataDir()
+      username, password, host, port, database = utils.get_credential(data)
+      uri = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(username=username, password=password, host=host, port=port, database=database)
       self._connection = MongoClient(uri, serverSelectionTimeoutMS=const.DB_CONNECTION_TIMEOUT)
       self._connection.server_info()
       self._db = database
+      self._collection = data.get('collection', '')
   
   def disconnect(self):
     if self._connection:
@@ -23,6 +27,7 @@ class MongoHelper():
       self._collection = ''
       self._connection = None
       self._db = ''
+      self._collection = ''
 
   def execute_query(self, querySql):
     if not self._collection:
