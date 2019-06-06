@@ -66,12 +66,12 @@ def get_credential(credential):
   # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
   return username, password, host, port, database
 def get_s3_credential(data):
-  end_point = credentail.get('endpoint', None)
+  endpoint = credentail.get('endpoint', None)
   access_key = credentail.get('accessKey', None)
   secret_key = credentail.get('secretKey', None)
   bucket = data.get('bucketName', None)
   credentail = data.get('credential', {})
-  if not end_point:
+  if not endpoint:
     raise AttributeError('No endpoint in credential')
   if not access_key:
     raise AttributeError('No accessKey in credential')
@@ -79,5 +79,5 @@ def get_s3_credential(data):
     raise AttributeError('No secretKey in credential')
   if not bucket:
     raise AttributeError('No bucketName in credential')
-  return end_point, access_key, secret_key, bucket
+  return endpoint, access_key, secret_key, bucket
 

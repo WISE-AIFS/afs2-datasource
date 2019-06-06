@@ -27,14 +27,14 @@ class s3Helper():
   def connect(self):
     try:
       data = utils.get_data_from_dataDir()
-      end_point, access_key, secret_key, bucket = utils.get_s3_credential(data)
+      endpoint, access_key, secret_key, bucket = utils.get_s3_credential(data)
       if self._connection is None:
         config = Config(signature_version='s3')
         connection = boto3.client(
           's3',
           aws_access_key_id=access_key,
           aws_secret_access_key=secret_key,
-          endpoint_url=end_point,
+          endpoint_url=endpoint,
           config=config
         )
         self._connection = connection

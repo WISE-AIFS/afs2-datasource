@@ -103,7 +103,7 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
 
 # for S3
 manager = DBManager(db_type=constant.DB_TYPE['S3'],
-  end_point=end_point,
+  endpoint=endpoint,
   access_key=access_key,
   secret_key=secret_key,
   bucket_name=bucket_name,
