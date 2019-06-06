@@ -41,7 +41,7 @@ class DBManager:
     querySql = config.get('querySql', None)
     collection = config.get('collection', None)
     # S3
-    end_point = config.get('end_point', None)
+    endpoint = config.get('endpoint', None)
     access_key = config.get('access_key', None)
     secret_key = config.get('secret_key', None)
     bucket_name = config.get('bucket_name', None)
@@ -60,7 +60,7 @@ class DBManager:
           'port': port,
           'database': database,
           'accessKey': access_key,
-          'endpoint': end_point,
+          'endpoint': endpoint,
           'secretKey': secret_key
         }
       }
