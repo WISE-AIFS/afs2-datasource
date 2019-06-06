@@ -7,7 +7,8 @@ importCSVtoInflux.py
 importCSVtoMongo.py
 importCSVtoPg.py
 main.py
-run.bat
+*.bat
 test.py
 */__pycache__
 afs2_datasource.egg-info/
+s3.py
