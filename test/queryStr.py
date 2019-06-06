@@ -8,6 +8,8 @@ config_file = [
   'config/mongo_external.json',
   'config/influx_internal.json',
   'config/influx_external.json',
+  'config/s3_internal.json',
+  'config/s3_external.json'
 ]
 
 # read json file
@@ -23,5 +25,8 @@ for config in config_file:
   db.connect()
 
   # query sql
-  data = db.execute_query()
-  print(data)
+  try:
+    data = db.execute_query()
+    print(True)
+  except Exception as e:
+    print(e)

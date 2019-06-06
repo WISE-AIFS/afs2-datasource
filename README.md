@@ -72,7 +72,7 @@ manager.disconnect()
 + <a hred="#execute_query"><code>DBManager.<b>execute_query()</b></code></a>
 + <a hred="#create_table"><code>DBManager.<b>create_table(table_name, columns)</b></code></a>
 + <a hred="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
-+ <a hred="#insert"><code>DBManager.<b>insert(table_name, columns, records)</b></code></a>
++ <a hred="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
 ----
 #### Init DBManager
 ##### With Enviroment Variable
@@ -80,11 +80,17 @@ Database config from environment variable.
 
 Export database config on command line.
 ```base
-export PAI_DATA_DIR="{"type": "mongo-firehose","data": {"dbType": "internal","querySql": "{QUERY_STRING}","collection": "{COLLECTION_NAME}","credential": {"username": "{DB_USERNAME}","password": "{DB_PASSWORD}","database": "{DB_NAME}","port": {DB_PORT},"host": "{DB_HOST}"}}}"
+export PAI_DATA_DIR="{"type": "mongo-firehose","data": {querySql": "{QUERY_STRING}","collection": "{COLLECTION_NAME}","credential": {"username": "{DB_USERNAME}","password": "{DB_PASSWORD}","database": "{DB_NAME}","port": {DB_PORT},"host": "{DB_HOST}"}}}"
+
+export PAI_DATA_DIR="{"type": "s3-firehose", "data": {"bucketName": "{BUCKET_NAME}", "blobList": ["{FILE_NAME}"], "credential": {"endpoint\": "{ENDPOINT}", "accessKey": "{ACESSKEY}", "secretKey": "{SECRETKEY}"}}}"
+
 ```
 ##### With Database Config
 Import database config via Python.
 ```python
+from afs2datasource import DBManager, constant
+
+# For PostgreSQL, MongoDB and InfluxDB 
 manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   username=username,
   password=password,
@@ -94,11 +100,21 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   collection=collection,
   querySql=querySql
 )
+
+# for S3
+manager = DBManager(db_type=constant.DB_TYPE['S3'],
+  end_point=end_point,
+  access_key=access_key,
+  secret_key=secret_key,
+  bucket_name=bucket_name,
+  blob_list=[file_name]
+)
+
 ```
 ----
 <a name="#connect"></a>
 #### DBManager.connect()
-Connect to PostgreSQL, MongoDB, InfluxDB with specified by the given config.
+Connect to PostgreSQL, MongoDB, InfluxDB, S3 with specified by the given config.
 ```python
 manager.connect()
 ```
@@ -106,6 +122,7 @@ manager.connect()
 <a name="#disconnect"></a>
 #### DBManager.disconnect()
 Close the connection.
+Note S3 datasource not support this function.
 ```python
 manager.disconnect()
 ```
@@ -133,8 +150,11 @@ manager.get_dbtype()
 ----
 <a name="#execute_query"></a>
 #### DBManager.execute_query()
-Return the result after executing the querySql in config.
+Return the result in PostgreSQL, MongoDB or InfluxDB after executing the querySql in config.
+Download files which is specified in blob_list in config, and return if all files downloaded is successfully.
+
 ```python
+# For Postgres, MongoDB and InfluxDB
 df = manager.execute_query()
 # Return type: DataFrame 
 """
@@ -146,14 +166,21 @@ df = manager.execute_query()
 4    35.0    7.0       2.0    8.0500  ...  1.0       0.0         36.0     2.0
 ...
 """
+# For S3
+is_success = manager.execute_query()
+# Return Boolean
+
 ```
 ----
 <a name="#create_table"></a>
 #### DBManager.create_table(table_name, columns=[])
-Create table in database.
+Create table in database for Postgres, MongoDB and InfluxDB.
+
+Create Bucket in S3.
 
 Note: PostgreSQL table_name format **schema.table**
 ```python
+# For Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 columns = [
   {'name': 'index', 'type': 'INTEGER', 'is_primary': True},
@@ -162,20 +189,36 @@ columns = [
   {'name': 'embarked', 'type': 'INTEGER'}
 ]
 manager.create_table(table_name=table_name, columns=columns)
+
+# For S3
+bucket_name = 'bucket'
+manager.create_table(table_name=bucket_name)
 ```
 ----
 <a name="#is_table_exist"></a>
 #### DBManager.is_table_exist(table_name)
-Return if the table is exist in database.
+Return if the table is exist in Postgres, MongoDB or Influxdb.
+
+Return if the bucket is exist in S3.
+
 ```python
+# For Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 manager.is_table_exist(table_name=table_name)
+
+# For S3
+bucket_name = 'bucket'
+manager.is_table_exist(table_name=bucket_name)
 ```
 ----
 <a name="#insert"></a>
-#### DBManager.insert(table_name, columns=[], records=[])
-Insert records into table 
+#### DBManager.insert(table_name, columns=[], records=[], source='', destination='')
+Insert records into table in Postgres, MongoDB or InfluxDB.
+
+Upload file to S3
+
 ```python
+# For Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 columns = ['index', 'survived', 'age', 'embarked']
 records = [
@@ -184,4 +227,10 @@ records = [
   [2, 0, 26.0, 7.0]
 ]
 manager.insert(table_name=table_name, columns=columns, records=records)
+
+# For S3
+bucket_name = 'bucket'
+source='test.csv'
+destination='test_s3.csv'
+manager.insert(table_name=bucket_name, source=source, destination=destination)
 ```

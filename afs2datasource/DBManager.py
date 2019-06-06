@@ -2,6 +2,7 @@ import os
 import json
 import pandas as pd
 import afs2datasource.constant as const
+import afs2datasource.utils as utils
 
 class DBManager:
   def __init__(self, **config):
@@ -24,17 +25,28 @@ class DBManager:
     database = config.get('database', None)
     querySql = config.get('querySql', None)
     collection = config.get('collection', None)
+    # S3
+    end_point = config.get('end_point', None)
+    access_key = config.get('access_key', None)
+    secret_key = config.get('secret_key', None)
+    bucket_name = config.get('bucket_name', None)
+    blobList = config.get('blob_list', None)
     dataDir = {
       'type': db_type,
       'data': {
         'collection': collection,
         'querySql': querySql,
+        'blobList': blobList,
+        'bucketName': bucket_name,
         'credential': {
           'username': username,
           'password': password,
           'host': host,
           'port': port,
-          'database': database
+          'database': database,
+          'accessKey': access_key,
+          'endpoint': end_point,
+          'secretKey': secret_key
         }
       }
     }
@@ -48,14 +60,10 @@ class DBManager:
       raise AttributeError('No type in dataDir')
     if dbType not in const.DB_TYPE.values():
       raise ValueError('{0} is not support'.format(dbType))
-    data = dataDir.get('data', {})
-    querySql = data.get('querySql', None)
-    if not querySql and not(type(querySql) is dict):
-      raise AttributeError('No querySql in dataDir[data]')
+        
     self._status = const.DB_STATUS['DISCONNECTED']
     self._helper = self._create_helper(dbType)
     self._dbType = dbType
-    self._querySql = querySql
 
   def _create_helper(self, dbType):
     dbType = dbType.lower()
@@ -100,10 +108,18 @@ class DBManager:
     return self._dbType
   
   def execute_query(self):
+    data = utils.get_data_from_dataDir()
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    self._querySql = self._helper.check_query(self._querySql)
-    return self._helper.execute_query(self._querySql)
+    query = None
+    if self._dbType == const.DB_TYPE['S3']:
+      query = data.get('blobList', [])
+    else:
+      query = data.get('querySql', None)
+      if not query and not(type(query) is dict):
+        raise AttributeError('No querySql in dataDir[data]')
+    query = self._helper.check_query(query)
+    return self._helper.execute_query(query)
 
   def is_table_exist(self, table_name=None):
     if table_name is None:
@@ -120,17 +136,24 @@ class DBManager:
     if self._helper.is_table_exist(table_name):
       raise ValueError('table_name is exist')
     columns = list(map(self._check_columns, columns))
-    self._helper.create_table(table_name, columns)
+    self._helper.create_table(table_name=table_name, columns=columns)
 
-  def insert(self, table_name=None, columns=(), records=[]):
+  def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
     if table_name is None:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
     if not self._helper.is_table_exist(table_name) and self._dbType != const.DB_TYPE['INFLUXDB']:
       raise ValueError('table_name is not exist')
-    records = [[None if pd.isnull(value) else value for value in record] for record in records]
-    self._helper.insert(table_name, columns, records)
+    if self._dbType == const.DB_TYPE['S3']:
+      if not source or not destination:
+        raise ValueError('source and destination is necessary')
+      if destination.endswith('/'):
+        raise ValueError('destination cannot end with "/"')
+      self._helper.insert(table_name=table_name, source=source, destination=destination)
+    else:
+      records = [[None if pd.isnull(value) else value for value in record] for record in records]
+      self._helper.insert(table_name=table_name, columns=columns, records=records)
 
   def _check_columns(self, col):
     if 'name' not in col:

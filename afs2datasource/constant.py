@@ -7,7 +7,8 @@ DB_STATUS = {
 DB_TYPE = {
   'MONGODB': 'mongo-firehose',
   'POSTGRES': 'postgresql-firehose',
-  'INFLUXDB': 'influxdb-firehose'
+  'INFLUXDB': 'influxdb-firehose',
+  'S3': 's3-firehose'
 }
 
 DB_CONNECTION_TIMEOUT = 500 # ms
