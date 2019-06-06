@@ -30,8 +30,8 @@ class MongoHelper():
     if self._connection is None:
       data = utils.get_data_from_dataDir()
       username, password, host, port, database = utils.get_credential_from_dataDir(data)
-      uri = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(username=username, password=password, host=host, port=port, database=database)
-      self._connection = MongoClient(uri, serverSelectionTimeoutMS=const.DB_CONNECTION_TIMEOUT)
+      uri = 'mongodb://{}:{}@{}:{}/{}'.format(username, password, host, port, database)
+      self._connection = MongoClient(uri)
       self._connection.server_info()
       self._db = database
       self._collection = data.get('collection', '')

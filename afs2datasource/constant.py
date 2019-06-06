@@ -25,5 +25,3 @@ DB_TYPE = {
   'INFLUXDB': 'influxdb-firehose',
   'S3': 's3-firehose'
 }
-
-DB_CONNECTION_TIMEOUT = 500 # ms
