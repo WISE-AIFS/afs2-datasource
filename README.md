@@ -7,75 +7,6 @@ Support Pyton version 3.6 or later
 pip install afs2-datasource
 ```
 
-## Example
-
-```python
-from afs2datasource import DBManager, constant
-
-# Init DBManager with enviroment variable
-manager = DBManager()
-
-"""
-# Init DBManager with datasource config
-manager = DBManager(
- db_type = constant.DB_TYPE['MONGODB'],
- username=username,
- password=password,
- host=host,
- port=port,
- database=database,
- collection=collection,
- querySql=querySql
-) 
-"""
-
-# Connect DB
-manager.connect()
-
-# Check the status of connection
-is_connected = manager.is_connected()
-# Return type: boolean
-
-# Check is the table is exist
-table_name = 'titanic'
-manager.is_table_exist(table_name)
-# Return type: boolean
-
-# Create Table
-columns = [
-  {'name': 'index', 'type': 'INTEGER', 'is_not_null': True},
-  {'name': 'survived', 'type': 'INTEGER'},
-  {'name': 'age', 'type': 'FLOAT'},
-  {'name': 'embarked', 'type': 'INTEGER'}
-]
-manager.create_table(table_name=table_name, columns=columns)
-
-# Insert Record
-columns = ['index', 'survived', 'age', 'embarked']
-records = [
-  [0, 1, 22.0, 7.0],
-  [1, 1, 2.0, 0.0],
-  [2, 0, 26.0, 7.0]
-]
-manager.insert(table_name=table_name, columns=columns, records=records)
-
-# Execute querySql in DB config
-data = manager.execute_query()
-# Return type: DataFrame 
-"""
-      index  survived   age   embarked
-0         0         1   22.0       7.0
-1         1         1    2.0       0.0
-2         2         0   26.0       7.0
-...
-"""
-
-
-# Disconnect to DB
-manager.disconnect()
-
-```
-
 ## API
 ### DBManager
 + <a href="#connect"><code>DBManager.<b>connect()</b></code></a>
@@ -89,7 +20,7 @@ manager.disconnect()
 + <a href="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
 ----
 #### Init DBManager
-##### With Enviroment Variable
+<!--##### With Enviroment Variable
 Database config from environment variable.
 
 Export database config on command line.
@@ -98,14 +29,14 @@ export PAI_DATA_DIR="{"type": "mongo-firehose","data": {querySql": "{QUERY_STRIN
 
 export PAI_DATA_DIR="{"type": "s3-firehose", "data": {"bucketName": "{BUCKET_NAME}", "blobList": ["{FILE_NAME}"], "credential": {"endpoint\": "{ENDPOINT}", "accessKey": "{ACESSKEY}", "secretKey": "{SECRETKEY}"}}}"
 
-```
+```-->
 ##### With Database Config
 Import database config via Python.
 ```python
 from afs2datasource import DBManager, constant
 
 # For PostgreSQL, MongoDB and InfluxDB 
-manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
+manager = DBManager(db_type=constant.DB_TYPE['MONGODB'], #constant.DB_TYPE['POSTGRES'], constant.DB_TYPE['INFLUXDB']
   username=username,
   password=password,
   host=host,
@@ -115,7 +46,7 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   querySql=querySql
 )
 
-# for S3
+# For S3
 manager = DBManager(db_type=constant.DB_TYPE['S3'],
   endpoint=endpoint,
   access_key=access_key,
@@ -248,4 +179,105 @@ bucket_name = 'bucket'
 source='test.csv' # local file path
 destination='test_s3.csv' # the file path and name in s3
 manager.insert(table_name=bucket_name, source=source, destination=destination)
+```
+---
+# Example
+
+## MongoDB Example
+
+```python
+from afs2datasource import DBManager, constant
+
+# Init DBManager
+manager = DBManager(
+ db_type=constant.DB_TYPE['MONGODB'],
+ username={USERNAME},
+ password={PASSWORD},
+ host={HOST},
+ port={PORT},
+ database={DATABASE},
+ collection={COLLECTION},
+ querySql={QUERYSQL}
+)
+
+# Connect DB
+manager.connect()
+
+# Check the status of connection
+is_connected = manager.is_connected()
+# Return type: boolean
+
+# Check is the table is exist
+table_name = 'titanic'
+manager.is_table_exist(table_name)
+# Return type: boolean
+
+# Create Table
+columns = [
+  {'name': 'index', 'type': 'INTEGER', 'is_not_null': True},
+  {'name': 'survived', 'type': 'INTEGER'},
+  {'name': 'age', 'type': 'FLOAT'},
+  {'name': 'embarked', 'type': 'INTEGER'}
+]
+manager.create_table(table_name=table_name, columns=columns)
+
+# Insert Record
+columns = ['index', 'survived', 'age', 'embarked']
+records = [
+  [0, 1, 22.0, 7.0],
+  [1, 1, 2.0, 0.0],
+  [2, 0, 26.0, 7.0]
+]
+manager.insert(table_name=table_name, columns=columns, records=records)
+
+# Execute querySql in DB config
+data = manager.execute_query()
+# Return type: DataFrame 
+"""
+      index  survived   age   embarked
+0         0         1   22.0       7.0
+1         1         1    2.0       0.0
+2         2         0   26.0       7.0
+...
+"""
+
+# Disconnect to DB
+manager.disconnect()
+```
+
+## S3 Example
+
+```python
+from afs2datasource import DBManager, constant
+
+# Init DBManager
+manager = DBManager(
+ db_type = constant.DB_TYPE['S3'],
+ endpoint={ENDPOINT},
+ access_key={ACCESSKEY},
+ secret_key={SECRETKEY},
+ bucket_name={BUCKET_NAME},
+ blob_list=['models/', 'dataset/train.csv']
+)
+
+# Connect S3
+manager.connect()
+
+# Check is the table is exist
+bucket_name = 'titanic'
+manager.is_table_exist(table_name=bucket_name)
+# Return type: boolean
+
+# Create Bucket
+manager.create_table(table_name=bucket_name)
+
+# Upload File to S3
+local_file = '../test.csv'
+s3_file = 'dataset/test.csv'
+manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
+
+# Download files in blob_list
+# Download all files in directory
+is_success = manager.execute_query()
+# Return type: Boolean 
 ```

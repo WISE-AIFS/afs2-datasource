@@ -104,7 +104,6 @@ endpoint=endpoint,
 access_key=access_key,
 secret_key=secret_key,
 bucket_name=bucket_name,
-database=database,
 blob_list=blob_list)
 db.connect()
 try:
