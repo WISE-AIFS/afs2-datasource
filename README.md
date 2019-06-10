@@ -78,7 +78,7 @@ manager.disconnect()
 
 ## API
 ### DBManager
-+ <a href="#connect"><code>DBManager.<b>connect()</b></code></a>
++ [<code>DBManager.<b>connect()</b></code>](#connect)
 + <a href="#disconnect"><code>DBManager.<b>disconnect()</b></code></a>
 + <a href="#is_connected"><code>DBManager.<b>is_connected()</b></code></a>
 + <a href="#is_connecting"><code>DBManager.<b>is_connecting()</b></code></a>
