@@ -127,14 +127,14 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
 
 ```
 ----
-<a name="#connect"></a>
+<a name="connect"></a>
 #### DBManager.connect()
 Connect to PostgreSQL, MongoDB, InfluxDB, S3 with specified by the given config.
 ```python
 manager.connect()
 ```
 ----
-<a name="#disconnect"></a>
+<a name="disconnect"></a>
 #### DBManager.disconnect()
 Close the connection.
 Note S3 datasource not support this function.
@@ -142,28 +142,28 @@ Note S3 datasource not support this function.
 manager.disconnect()
 ```
 ----
-<a name="#is_connected"></a>
+<a name="is_connected"></a>
 #### DBManager.is_connected()
 Return if the connection is connected.
 ```python
 manager.is_connected()
 ```
 ----
-<a name="#is_connecting"></a>
+<a name="is_connecting"></a>
 #### DBManager.is_connecting()
 Return if the connection is connecting.
 ```python
 manager.is_connecting()
 ```
 ----
-<a name="#get_dbtype"></a>
+<a name="get_dbtype"></a>
 #### DBManager.get_dbtype()
 Return database type of the connection.
 ```python
 manager.get_dbtype()
 ```
 ----
-<a name="#execute_query"></a>
+<a name="execute_query"></a>
 #### DBManager.execute_query()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the querySql in config.
 Download files which is specified in blob_list in config, and return if all files downloaded is successfully.
@@ -187,7 +187,7 @@ is_success = manager.execute_query()
 
 ```
 ----
-<a name="#create_table"></a>
+<a name="create_table"></a>
 #### DBManager.create_table(table_name, columns=[])
 Create table in database for Postgres, MongoDB and InfluxDB.
 
@@ -210,7 +210,7 @@ bucket_name = 'bucket'
 manager.create_table(table_name=bucket_name)
 ```
 ----
-<a name="#is_table_exist"></a>
+<a name="is_table_exist"></a>
 #### DBManager.is_table_exist(table_name)
 Return if the table is exist in Postgres, MongoDB or Influxdb.
 
@@ -226,7 +226,7 @@ bucket_name = 'bucket'
 manager.is_table_exist(table_name=bucket_name)
 ```
 ----
-<a name="#insert"></a>
+<a name="insert"></a>
 #### DBManager.insert(table_name, columns=[], records=[], source='', destination='')
 Insert records into table in Postgres, MongoDB or InfluxDB.
 
