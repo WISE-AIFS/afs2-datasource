@@ -10,10 +10,24 @@ pip install afs2-datasource
 ## Example
 
 ```python
-from afs2datasource import DBManager
+from afs2datasource import DBManager, constant
 
 # Init DBManager with enviroment variable
 manager = DBManager()
+
+"""
+# Init DBManager with datasource config
+manager = DBManager(
+ db_type = constant.DB_TYPE['MONGODB'],
+ username=username,
+ password=password,
+ host=host,
+ port=port,
+ database=database,
+ collection=collection,
+ querySql=querySql
+) 
+"""
 
 # Connect DB
 manager.connect()
@@ -64,15 +78,15 @@ manager.disconnect()
 
 ## API
 ### DBManager
-+ <a hred="#connect"><code>DBManager.<b>connect()</b></code></a>
-+ <a hred="#disconnect"><code>DBManager.<b>disconnect()</b></code></a>
-+ <a hred="#is_connected"><code>DBManager.<b>is_connected()</b></code></a>
-+ <a hred="#is_connecting"><code>DBManager.<b>is_connecting()</b></code></a>
-+ <a hred="#get_dbtype"><code>DBManager.<b>get_dbtype()</b></code></a>
-+ <a hred="#execute_query"><code>DBManager.<b>execute_query()</b></code></a>
-+ <a hred="#create_table"><code>DBManager.<b>create_table(table_name, columns)</b></code></a>
-+ <a hred="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
-+ <a hred="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
++ <a href="#connect"><code>DBManager.<b>connect()</b></code></a>
++ <a href="#disconnect"><code>DBManager.<b>disconnect()</b></code></a>
++ <a href="#is_connected"><code>DBManager.<b>is_connected()</b></code></a>
++ <a href="#is_connecting"><code>DBManager.<b>is_connecting()</b></code></a>
++ <a href="#get_dbtype"><code>DBManager.<b>get_dbtype()</b></code></a>
++ <a href="#execute_query"><code>DBManager.<b>execute_query()</b></code></a>
++ <a href="#create_table"><code>DBManager.<b>create_table(table_name, columns)</b></code></a>
++ <a href="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
++ <a href="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
 ----
 #### Init DBManager
 ##### With Enviroment Variable
