@@ -122,6 +122,7 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   secret_key=secret_key,
   bucket_name=bucket_name,
   blob_list=[file_name]
+  # file_name can be directory `models/` or file `test.csv`
 )
 
 ```
@@ -244,7 +245,7 @@ manager.insert(table_name=table_name, columns=columns, records=records)
 
 # For S3
 bucket_name = 'bucket'
-source='test.csv'
-destination='test_s3.csv'
+source='test.csv' # local file path
+destination='test_s3.csv' # the file path and name in s3
 manager.insert(table_name=bucket_name, source=source, destination=destination)
 ```
