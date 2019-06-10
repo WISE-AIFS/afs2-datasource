@@ -126,7 +126,7 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
 
 ```
 ----
-<a name="#connect"></a>
+<a name="connect"></a>
 #### DBManager.connect()
 Connect to PostgreSQL, MongoDB, InfluxDB, S3 with specified by the given config.
 ```python
