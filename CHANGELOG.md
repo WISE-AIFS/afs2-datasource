@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.1.18] - 2019-06-10
+### Added
+- DBManager support S3
+
 ## [2.1.17] - 2019-05-30
 ### Added
 - Init DBManager with local config
