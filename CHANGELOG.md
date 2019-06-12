@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unrelease]
+### Added
+- S3Helper
+  - is_file_exist
+  - delete_file
+
 ## [2.1.18] - 2019-06-10
 ### Added
 - DBManager support S3

@@ -143,6 +143,15 @@ class DBManager:
       raise RuntimeError('No connection.')
     return self._helper.is_table_exist(table_name)
 
+  def is_file_exist(self, table_name='', file_name=''):
+    if self._dbType != const.DB_TYPE['S3']:
+      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if not table_name:
+      raise ValueError('table_name is necessary')
+    if not file_name:
+      raise ValueError('file_name is necessary')
+    return self._helper.is_file_exist(table_name, file_name)
+
   def create_table(self, table_name=None, columns=[]):
     if table_name is None:
       raise ValueError('table_name is necessary')
@@ -154,7 +163,7 @@ class DBManager:
     self._helper.create_table(table_name=table_name, columns=columns)
 
   def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
-    if table_name is None:
+    if not table_name:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
@@ -165,10 +174,23 @@ class DBManager:
         raise ValueError('source and destination is necessary')
       if destination.endswith('/'):
         raise ValueError('destination cannot end with "/"')
-      self._helper.insert(table_name=table_name, source=source, destination=destination)
+      return self._helper.insert(table_name=table_name, source=source, destination=destination)
     else:
       records = [[None if pd.isnull(value) else value for value in record] for record in records]
-      self._helper.insert(table_name=table_name, columns=columns, records=records)
+      return self._helper.insert(table_name=table_name, columns=columns, records=records)
+
+  # def delete_table(self, table_name=''):
+
+  def delete_file(self, table_name='', file_name=''):
+    if self._dbType != const.DB_TYPE['S3']:
+      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if not table_name:
+      raise ValueError('table_name is necessary')
+    if not file_name:
+      raise ValueError('file_name is necessary')
+    if not self.is_file_exist(table_name, file_name):
+      raise FileNotFoundError('{} file is not found'.format(file_name))
+    return self._helper.delete_file(table_name, file_name)
 
   def _check_columns(self, col):
     if 'name' not in col:

@@ -107,6 +107,19 @@ class s3Helper():
       logging.error('[Is Table Exist]: {}'.format(e))
       return False
 
+  def is_file_exist(self, table_name, file_name):
+    try:
+      response = self._connection.head_object(
+        Bucket=table_name,
+        Key=file_name
+      )
+      return True
+    except Exception as e:
+      if e.response['Error']['Code'] == '404':
+        return False
+      else:
+        raise e
+
   def create_table(self, table_name, columns):
     try:
       self._connection.create_bucket(Bucket=table_name)
@@ -134,3 +147,10 @@ class s3Helper():
         return True
       else:
         logging.error('[Insert]: {}'.format(e))
+
+  def delete_file(self, table_name, file_name):
+    self._connection.delete_object(
+      Bucket=table_name,
+      Key=file_name
+    )
+    return True
