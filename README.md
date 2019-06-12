@@ -35,14 +35,33 @@ Import database config via Python.
 ```python
 from afs2datasource import DBManager, constant
 
-# For PostgreSQL, MongoDB and InfluxDB 
-manager = DBManager(db_type=constant.DB_TYPE['MONGODB'], #constant.DB_TYPE['POSTGRES'], constant.DB_TYPE['INFLUXDB']
+# For PostgreSQL
+manager = DBManager(db_type=constant.DB_TYPE['POSTGRES'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  database=database,
+  querySql=querySql
+)
+
+# For MongoDB
+manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   username=username,
   password=password,
   host=host,
   port=port,
   database=database,
   collection=collection,
+  querySql=querySql
+)
+# For InfluxDB
+manager = DBManager(db_type=constant.DB_TYPE['INFLUXDB'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  database=database,
   querySql=querySql
 )
 
@@ -55,7 +74,6 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   blob_list=[file_name]
   # file_name can be directory `models/` or file `test.csv`
 )
-
 ```
 ----
 <a name="connect"></a>
