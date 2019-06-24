@@ -187,6 +187,7 @@ Note this function only support S3.
 bucket_name = 'bucket'
 file_name = 'test.csv
 manager.is_file_exist(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
 ```
 ----
 <a name="insert"></a>
@@ -224,6 +225,7 @@ Note this function only support S3.
 bucket_name = 'bucket'
 file_name = 'test_s3.csv'
 manager.delete_file(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
 ```
 ---
 # Example
