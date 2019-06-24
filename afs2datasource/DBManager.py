@@ -32,39 +32,68 @@ class DBManager:
     self._helper = self._create_helper(self._dbType)
 
   def _get_credential_from_config(self, config):
+    dataDir = {}
     db_type = config.get('db_type', None)
-    username = config.get('username', None)
-    password = config.get('password', None)
-    host = config.get('host', None)
-    port = config.get('port', None)
-    database = config.get('database', None)
-    querySql = config.get('querySql', None)
-    collection = config.get('collection', None)
-    # S3
-    endpoint = config.get('endpoint', None)
-    access_key = config.get('access_key', None)
-    secret_key = config.get('secret_key', None)
-    bucket_name = config.get('bucket_name', None)
-    blobList = config.get('blob_list', None)
-    dataDir = {
-      'type': db_type,
-      'data': {
-        'collection': collection,
-        'querySql': querySql,
-        'blobList': blobList,
-        'bucketName': bucket_name,
-        'credential': {
-          'username': username,
-          'password': password,
-          'host': host,
-          'port': port,
-          'database': database,
-          'accessKey': access_key,
-          'endpoint': endpoint,
-          'secretKey': secret_key
+    if db_type == const.DB_TYPE['S3']:
+      endpoint = config.get('endpoint', None)
+      access_key = config.get('access_key', None)
+      secret_key = config.get('secret_key', None)
+      bucket_name = config.get('bucket_name', None)
+      blobList = config.get('blob_list', None)
+      dataDir = {
+        'type': db_type,
+        'data': {
+          'blobList': blobList,
+          'bucketName': bucket_name,
+          'credential': {
+            'accessKey': access_key,
+            'endpoint': endpoint,
+            'secretKey': secret_key
+          }
         }
       }
-    }
+    elif db_type == const.DB_TYPE['APM']:
+      username = config.get('username', None)
+      password = config.get('password', None)
+      apmUrl = config.get('apmUrl', None)
+      machineIdList = config.get('machineIdList', None)
+      parameterList = config.get('parameterList', None)
+      mongouri = config.get('mongouri', None)
+      timeRange = config.get('timeRange', None)
+      dataDir = {
+        'type': db_type,
+        'data': {
+          'username': username,
+          'password': password,
+          'apmUrl': apmUrl,
+          'machineIdList': machineIdList,
+          'parameterList': parameterList,
+          'mongouri': mongouri,
+          'timeRange': timeRange
+        }
+      }
+    else:
+      username = config.get('username', None)
+      password = config.get('password', None)
+      host = config.get('host', None)
+      port = config.get('port', None)
+      database = config.get('database', None)
+      querySql = config.get('querySql', None)
+      collection = config.get('collection', None)
+      dataDir = {
+        'type': db_type,
+        'data': {
+          'collection': collection,
+          'querySql': querySql,
+          'credential': {
+            'username': username,
+            'password': password,
+            'host': host,
+            'port': port,
+            'database': database
+          }
+        }
+      }
     os.environ['PAI_DATA_DIR'] = json.dumps(dataDir)
 
   def _get_credential_from_env(self, dataDir):
@@ -94,6 +123,9 @@ class DBManager:
     elif dbType == const.DB_TYPE['S3']:
       import afs2datasource.s3Helper as s3Helper
       return s3Helper.s3Helper()
+    elif dbType == const.DB_TYPE['APM']:
+      import afs2datasource.apmDSHelper as apmDSHelper
+      return apmDSHelper.APMDSHelper()
     else:
       return None
 
@@ -129,6 +161,12 @@ class DBManager:
     query = None
     if self._dbType == const.DB_TYPE['S3']:
       query = data.get('blobList', [])
+    elif self._dbType == const.DB_TYPE['APM']:
+      query = {
+        'machine_list': data.get('machineIdList', []),
+        'parameter_list': data.get('parameterList', []),
+        'time_range': data.get('timeRange', [])
+      }
     else:
       query = data.get('querySql', None)
       if not query and not(type(query) is dict):
@@ -143,6 +181,15 @@ class DBManager:
       raise RuntimeError('No connection.')
     return self._helper.is_table_exist(table_name)
 
+  def is_file_exist(self, table_name='', file_name=''):
+    if self._dbType != const.DB_TYPE['S3']:
+      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if not table_name:
+      raise ValueError('table_name is necessary')
+    if not file_name:
+      raise ValueError('file_name is necessary')
+    return self._helper.is_file_exist(table_name, file_name)
+
   def create_table(self, table_name=None, columns=[]):
     if table_name is None:
       raise ValueError('table_name is necessary')
@@ -154,7 +201,7 @@ class DBManager:
     self._helper.create_table(table_name=table_name, columns=columns)
 
   def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
-    if table_name is None:
+    if not table_name:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
@@ -165,10 +212,23 @@ class DBManager:
         raise ValueError('source and destination is necessary')
       if destination.endswith('/'):
         raise ValueError('destination cannot end with "/"')
-      self._helper.insert(table_name=table_name, source=source, destination=destination)
+      return self._helper.insert(table_name=table_name, source=source, destination=destination)
     else:
       records = [[None if pd.isnull(value) else value for value in record] for record in records]
-      self._helper.insert(table_name=table_name, columns=columns, records=records)
+      return self._helper.insert(table_name=table_name, columns=columns, records=records)
+
+  # def delete_table(self, table_name=''):
+
+  def delete_file(self, table_name='', file_name=''):
+    if self._dbType != const.DB_TYPE['S3']:
+      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if not table_name:
+      raise ValueError('table_name is necessary')
+    if not file_name:
+      raise ValueError('file_name is necessary')
+    if not self.is_file_exist(table_name, file_name):
+      raise FileNotFoundError('{} file is not found'.format(file_name))
+    return self._helper.delete_file(table_name, file_name)
 
   def _check_columns(self, col):
     if 'name' not in col:

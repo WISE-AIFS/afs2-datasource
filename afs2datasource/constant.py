@@ -23,5 +23,6 @@ DB_TYPE = {
   'MONGODB': 'mongo-firehose',
   'POSTGRES': 'postgresql-firehose',
   'INFLUXDB': 'influxdb-firehose',
-  'S3': 's3-firehose'
+  'S3': 's3-firehose',
+  'APM': 'apm-firehose'
 }

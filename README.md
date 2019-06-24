@@ -18,7 +18,9 @@ pip install afs2-datasource
 + <a href="#execute_query"><code>DBManager.<b>execute_query()</b></code></a>
 + <a href="#create_table"><code>DBManager.<b>create_table(table_name, columns)</b></code></a>
 + <a href="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
++ <a href="#is_file_exist"><code>DBManager.<b>is_file_exist(table_name, file_name)</b></code></a>
 + <a href="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
++ <a href="#delete_file"><code>DBManager.<b>delete_file(table_name, file_name)</b></code></a>
 ----
 <a name="init"></a>
 #### Init DBManager
@@ -177,6 +179,19 @@ bucket_name = 'bucket'
 manager.is_table_exist(table_name=bucket_name)
 ```
 ----
+<a name="is_file_exist"></a>
+#### DBManager.is_file_exist(table_name, file_name)
+Return if the file is exist in Bucket in S3.
+
+Note this function only support S3.
+```python
+# For S3
+bucket_name = 'bucket'
+file_name = 'test.csv
+manager.is_file_exist(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
+```
+----
 <a name="insert"></a>
 #### DBManager.insert(table_name, columns=[], records=[], source='', destination='')
 Insert records into table in Postgres, MongoDB or InfluxDB.
@@ -200,6 +215,7 @@ source='test.csv' # local file path
 destination='test_s3.csv' # the file path and name in s3
 manager.insert(table_name=bucket_name, source=source, destination=destination)
 ```
+---
 #### Use APM data source
 * Get Hist Raw data from SCADA Mongo data base
 * Required
@@ -214,6 +230,20 @@ manager.insert(table_name=bucket_name, source=source, destination=destination)
     ```json
     [{'start':'2019-05-01', 'end':'2019-05-31'}]
     ```
+----
+<a name="delete_file"></a>
+#### DBManager.delete_file(table_name, file_name)
+Delete file in bucket is S3 and return if the file is deleted successfully.
+
+Note this function only support S3.
+
+```python
+# For S3
+bucket_name = 'bucket'
+file_name = 'test_s3.csv'
+manager.delete_file(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
+```
 ---
 # Example
 
@@ -313,8 +343,18 @@ manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 # Download files in blob_list
 # Download all files in directory
 is_success = manager.execute_query()
+
 # Return type: Boolean
 ```
+# Return type: Boolean 
+
+# Check if file is exist or not
+is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
+# Return type: Boolean
+
+# Delete the file in Bucket and return if the file is deleted successfully
+is_success = manager.delete_file(table_name=bucket_name, file_name=s3_file)
+# Return type: Boolean
 
 ## APM Data source example
 ```python
