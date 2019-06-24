@@ -47,7 +47,7 @@ manager.insert(table_name=table_name, columns=columns, records=records)
 
 # Execute querySql in DB config
 data = manager.execute_query()
-# Return type: DataFrame 
+# Return type: DataFrame
 """
       index  survived   age   embarked
 0         0         1   22.0       7.0
@@ -136,7 +136,7 @@ manager.get_dbtype()
 Return the result after executing the querySql in config.
 ```python
 df = manager.execute_query()
-# Return type: DataFrame 
+# Return type: DataFrame
 """
       Age  Cabin  Embarked      Fare  ...  Sex  Survived  Ticket_info  Title2
 0    22.0    7.0       2.0    7.2500  ...  1.0       0.0          2.0     2.0
@@ -174,7 +174,7 @@ manager.is_table_exist(table_name=table_name)
 ----
 <a name="#insert"></a>
 #### DBManager.insert(table_name, columns=[], records=[])
-Insert records into table 
+Insert records into table
 ```python
 table_name = 'titanic'
 columns = ['index', 'survived', 'age', 'embarked']
@@ -184,4 +184,24 @@ records = [
   [2, 0, 26.0, 7.0]
 ]
 manager.insert(table_name=table_name, columns=columns, records=records)
+```
+---
+
+###### Use APM data source
+* Get Hist Raw data from SCADA Mongo data base
+* Required
+  - username: APM SSO username
+  - password: APM SSO password
+  - uri: mongo data base uri
+  - apmurl: APM api url
+  - machineIdList: APM machine Id list **type:Array**
+  - parameterList: APM parameter name list **type:Array**
+  - time range: Training date range
+    * example:
+    ```json
+    [{'start':'2019-05-01', 'end':'2019-05-31'}]
+    ```
+```python
+APMDSHelper(username,password,apmurl,machineIdList,parameterList,mongouri,timeRange)
+APMDSHelper.execute()
 ```
