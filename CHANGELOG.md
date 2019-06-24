@@ -1,11 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unrelease]
+## [2.1.19] - 2019-06-24
 ### Added
 - S3Helper
   - is_file_exist
   - delete_file
+- APMDSHelper
+  - execute_query
 
 ## [2.1.18] - 2019-06-10
 ### Added
