@@ -201,6 +201,7 @@ manager.insert(table_name=table_name, columns=columns, records=records)
     ```json
     [{'start':'2019-05-01', 'end':'2019-05-31'}]
     ```
+* Execute example
 ```python
 APMDSHelper(username,password,apmurl,machineIdList,parameterList,mongouri,timeRange)
 APMDSHelper.execute()
