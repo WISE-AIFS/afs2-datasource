@@ -15,6 +15,7 @@
 
 import os
 import json
+import asyncio
 import pandas as pd
 import afs2datasource.constant as const
 import afs2datasource.utils as utils
@@ -30,6 +31,7 @@ class DBManager:
       raise ValueError('No DB config.')
     self._status = const.DB_STATUS['DISCONNECTED']
     self._helper = self._create_helper(self._dbType)
+    self.loop = asyncio.get_event_loop()
 
   def _get_credential_from_config(self, config):
     dataDir = {}
@@ -68,8 +70,10 @@ class DBManager:
           'apmUrl': apmUrl,
           'machineIdList': machineIdList,
           'parameterList': parameterList,
-          'mongouri': mongouri,
-          'timeRange': timeRange
+          'timeRange': timeRange,
+          'credentials': {
+            'uri': mongouri
+          }
         }
       }
     else:
@@ -172,7 +176,7 @@ class DBManager:
       if not query and not(type(query) is dict):
         raise AttributeError('No querySql in dataDir[data]')
     query = self._helper.check_query(query)
-    return self._helper.execute_query(query)
+    return self.loop.run_until_complete(self._helper.execute_query(query))
 
   def is_table_exist(self, table_name=None):
     if table_name is None:

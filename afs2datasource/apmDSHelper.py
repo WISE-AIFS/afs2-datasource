@@ -17,6 +17,8 @@ import json
 import os
 import requests as req
 from urllib.parse import urljoin
+import motor.motor_asyncio
+import asyncio
 from pymongo import MongoClient, errors, DESCENDING, ASCENDING
 import pandas as pd
 import datetime
@@ -44,7 +46,8 @@ class APMDSHelper():
 
   def connect(self):
     if self._connection is None:
-      self._connection = MongoClient(self.__mongo_credentials)
+      # self._connection = MongoClient(self.__mongo_credentials)
+      self._connection = motor.motor_asyncio.AsyncIOMotorClient(self.__mongo_credentials)
       self._db = self.__mongo_credentials.split('/')[-1]
 
   def disconnect(self):
@@ -60,6 +63,9 @@ class APMDSHelper():
       raise ValueError('parameter_list is invalid')
     if not query['time_range']:
       raise ValueError('time_range is invalid')
+    for time in query['time_range']:
+      if time.get('start') is None or time.get('end') is None:
+        raise ValueError('time_range is invalid')
     return query
 
   def get_token(self):
@@ -86,9 +92,10 @@ class APMDSHelper():
         if (machineDetail.status_code == 200):
           dtInstance = json.loads(machineDetail.text)['dtInstance']
           self.reorganize_detail(dtInstance)
-        # else: 沒有加進 machine_content有沒有關係?
+        else:
+          raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, machineDetail.status_code))
       except Exception as e:
-        print('Get Machine {0} detail failed: {1}'.format(min, e))
+        raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, e))
 
   def reorganize_detail(self,dtInstance):
     tags = []
@@ -96,41 +103,42 @@ class APMDSHelper():
     dtFeature = dtInstance['feature']['monitor']
     dtProperty = dtInstance['property']['iotSense']
     device = dtProperty['deviceId'].split('@')[-1]
-    for i,e in enumerate(dtFeature):
-      for p in self.parameter_list:
-        if p == e['name']:
-          splitTagList = dtFeature[i]['tag'].split('@')
-          tags.append({'name': dtFeature[i]['name'], 'tag': splitTagList[len(splitTagList)-1]})
-    for t in range(len(tags)):
-      compact.append(device + '\\' + tags[t]['tag'])
-    self.machine_content.append({'tags': tags, 'info': dtProperty, 'deviceCompact': compact})
+    dtFeature = list(filter(lambda f: f['name'] in self.parameter_list, dtFeature))
+    tags = []
+    for t in dtFeature:
+      tags.append({
+        's': dtProperty['groupId'],
+        't': device + '\\' + t['tag'].split('@')[-1],
+      })
+    self.machine_content += tags
 
-  def generate_querySql(self):
+  async def generate_querySql(self):
     timeSql = []
     querySql = []
-    for tr in range(len(self.time_range)):
-      startTS = datetime.datetime.strptime(self.time_range[tr]['start'], '%Y-%m-%d')
-      endTS = datetime.datetime.strptime(self.time_range[tr]['end'], '%Y-%m-%d')
+    for tr in self.time_range:
+      startTS = datetime.datetime.strptime(tr['start'], '%Y-%m-%d')
+      endTS = datetime.datetime.strptime(tr['end'], '%Y-%m-%d')
       timeSql.append({'ts': {'$gte': startTS, '$lte': endTS}})
     for mc in self.machine_content:
-      for d in range(len(mc['deviceCompact'])):
-        querySql.append({'s': mc['info']['groupId'], 't': mc['deviceCompact'][d], '$or': timeSql })
-    return self.execute('scada_HistRawData', querySql)
+      mc['$or'] = timeSql
+      querySql.append(mc)
+    self.data_container = []
+    await asyncio.wait([self.execute('scada_HistRawData', sql) for sql in querySql])
+    return self.combine_data(self.data_container)
+    # return self.execute('scada_HistRawData', querySql)
 
-  def execute_query(self, query):
+  async def execute_query(self, query):
     self.get_machine_detail()
-    return self.generate_querySql()
+    return await self.generate_querySql()
 
-  def execute(self, collection, query_sql):
-    data_container = []
-    for sql in range(len(query_sql)):
-      data = list(self._connection[self._db][collection].find(query_sql[sql], {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING))
-      count_data = len(data)
-      data = pd.DataFrame(data=data)
-      if count_data is not 0:
-        data.columns = ['ts', (query_sql[sql]['t'] + '\\' + self.parameter_list[(sql % len(self.parameter_list))])]
-        data_container.append(data)
-    return self.combine_data(data_container)
+  async def execute(self, collection, query_sql):
+    documents = self._connection[self._db][collection].find(query_sql, {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING)
+    data = await documents.to_list(length=None)
+    count_data = len(data)
+    data = pd.DataFrame(data=data)
+    if count_data is not 0:
+      data.columns = ['ts', query_sql['t']]
+      self.data_container.append(data)
 
   def combine_data(self, container):
     time_stamp_index = None
