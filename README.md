@@ -343,7 +343,6 @@ manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 # Download files in blob_list
 # Download all files in directory
 is_success = manager.execute_query()
-
 # Return type: Boolean
 
 # Check if file is exist or not
