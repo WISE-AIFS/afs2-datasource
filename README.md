@@ -345,8 +345,6 @@ manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 is_success = manager.execute_query()
 
 # Return type: Boolean
-```
-# Return type: Boolean 
 
 # Check if file is exist or not
 is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
@@ -355,6 +353,8 @@ is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
 # Delete the file in Bucket and return if the file is deleted successfully
 is_success = manager.delete_file(table_name=bucket_name, file_name=s3_file)
 # Return type: Boolean
+```
+---
 
 ## APM Data source example
 ```python
