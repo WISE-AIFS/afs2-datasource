@@ -62,6 +62,7 @@ class DBManager:
       parameterList = config.get('parameterList', None)
       mongouri = config.get('mongouri', None)
       timeRange = config.get('timeRange', None)
+      timeLast = config.get('timeLast',None)
       dataDir = {
         'type': db_type,
         'data': {
@@ -71,6 +72,7 @@ class DBManager:
           'machineIdList': machineIdList,
           'parameterList': parameterList,
           'timeRange': timeRange,
+          'timeLast': timeLast,
           'credentials': {
             'uri': mongouri
           }
@@ -169,7 +171,8 @@ class DBManager:
       query = {
         'machine_list': data.get('machineIdList', []),
         'parameter_list': data.get('parameterList', []),
-        'time_range': data.get('timeRange', [])
+        'time_range': data.get('timeRange', []),
+        'time_last': data.get('timeLast', [])
       }
     else:
       query = data.get('querySql', None)

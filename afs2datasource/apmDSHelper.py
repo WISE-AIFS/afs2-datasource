@@ -37,7 +37,12 @@ class APMDSHelper():
       self.machine_list = dataDir['data']['machineIdList']
       self.parameter_list = dataDir['data']['parameterList']
       self.__mongo_credentials = dataDir['data']['credentials']['uri']
-      self.time_range = dataDir['data']['timeRange']
+      if dataDir['data']['timeRange'] != []:
+        self.time_range = dataDir['data']['timeRange']
+      elif dataDir['data']['timeLast'] != []:
+        new_start_time = (datetime.datetime.now(
+        ) - datetime.timedelta(days=int(dataDir['data']['timeLast']['lastDays']), hours=int(dataDir['data']['timeLast']['lastHours']), minutes=int(dataDir['data']['timeLast']['lastMins']))).strftime('%Y-%m-%d')
+        self.time_range = [{'start': new_start_time,'end': datetime.datetime.now().strftime('%Y-%m-%d')}]
     else:
       raise AssertionError(
         "Environment parameters need apm_username={username}, apm_password={password}, apm_url={apmUrl}, machine_id_list={machineIdList}, parameter_list={parameterList}, mongo_uri={mongouri} and time_range={timeRange}".format(
@@ -61,11 +66,15 @@ class APMDSHelper():
       raise ValueError('machine_list is invalid')
     if not query['parameter_list']:
       raise ValueError('parameter_list is invalid')
-    if not query['time_range']:
+    if not query['time_range'] and not query['time_last']:
       raise ValueError('time_range is invalid')
-    for time in query['time_range']:
-      if time.get('start') is None or time.get('end') is None:
-        raise ValueError('time_range is invalid')
+    if query['time_range']:
+      for time in query['time_range']:
+        if time.get('start') is None or time.get('end') is None:
+          raise ValueError('time_range is invalid')
+    elif query['time_last']:
+      if query['time_last'].get('lastDays') is None or query['time_last'].get('lastHours') is None or query['time_last'].get('lastMins') is None:
+        raise ValueError('time_last is invalid')
     return query
 
   def get_token(self):
@@ -117,7 +126,7 @@ class APMDSHelper():
     querySql = []
     for tr in self.time_range:
       startTS = datetime.datetime.strptime(tr['start'], '%Y-%m-%d')
-      endTS = datetime.datetime.strptime(tr['end'], '%Y-%m-%d')
+      endTS = datetime.datetime.strptime(tr['end'], '%Y-%m-%d') + datetime.timedelta(days=1)
       timeSql.append({'ts': {'$gte': startTS, '$lte': endTS}})
     for mc in self.machine_content:
       mc['$or'] = timeSql
@@ -141,15 +150,16 @@ class APMDSHelper():
       self.data_container.append(data)
 
   def combine_data(self, container):
-    time_stamp_index = None
-    for i, e in enumerate(container):
-      if "Time_Stamp" in e.columns[1] and "Time_Stamp_ms" not in e.columns[1]:
-        self.results = container[i]
-        time_stamp_index = i
+    self.results = container[0]
+    # time_stamp_index = None
+    # for i, e in enumerate(container):
+    #   if "Time_Stamp" in e.columns[1] and "Time_Stamp_ms" not in e.columns[1]:
+    #     self.results = container[i]
+    #     time_stamp_index = i
     for contain in range(len(container)):
-      if contain == time_stamp_index:
+      if contain == 0:
         continue
-      self.results = pd.merge(self.results, container[contain], how='left', on='ts')
+      self.results = pd.merge(self.results, container[contain], how='outer', on='ts').sort_values(by=['ts'])
     return self.results
 
   def is_table_exist(self, table_name):
@@ -158,8 +168,8 @@ class APMDSHelper():
   def is_file_exist(self, table_name, file_name):
     raise NotImplementedError('APMDataSource not implement.')
 
-  def create_tabe(sef, table_name):
+  def create_tabe(self, table_name):
     raise NotImplementedError('APMDataSource not implement.')
 
-  def insert(table_name, columns, records):
+  def insert(self,table_name, columns, records):
     raise NotImplementedError('APMDataSource not implement.')
