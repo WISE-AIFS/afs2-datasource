@@ -57,6 +57,7 @@ class DBManager:
     elif db_type == const.DB_TYPE['APM']:
       username = config.get('username', None)
       password = config.get('password', None)
+      password = base64.b64encode(password.encode('UTF-8')).decode('UTF-8')
       apmUrl = config.get('apmUrl', None)
       machineIdList = config.get('machineIdList', None)
       parameterList = config.get('parameterList', None)
