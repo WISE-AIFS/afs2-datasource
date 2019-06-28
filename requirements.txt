@@ -4,3 +4,4 @@ psycopg2-binary==2.8.1
 influxdb==5.2.2
 boto3==1.9.156
 requests==2.22.0
+motor==2.0.0

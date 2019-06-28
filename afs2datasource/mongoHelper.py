@@ -44,7 +44,7 @@ class MongoHelper():
       self._db = ''
       self._collection = ''
 
-  def execute_query(self, querySql):
+  async def execute_query(self, querySql):
     if not self._collection:
       raise AttributeError('No collection in data')
     data = list(self._connection[self._db][self._collection].find(querySql, {'_id': 0}))

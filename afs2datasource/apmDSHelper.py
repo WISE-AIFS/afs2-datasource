@@ -19,10 +19,9 @@ import requests as req
 from urllib.parse import urljoin
 import motor.motor_asyncio
 import asyncio
-from pymongo import MongoClient, errors, DESCENDING, ASCENDING
+from pymongo import ASCENDING
 import pandas as pd
 import datetime
-import base64
 
 class APMDSHelper():
   def __init__(self):
@@ -46,7 +45,6 @@ class APMDSHelper():
 
   def connect(self):
     if self._connection is None:
-      # self._connection = MongoClient(self.__mongo_credentials)
       self._connection = motor.motor_asyncio.AsyncIOMotorClient(self.__mongo_credentials)
       self._db = self.__mongo_credentials.split('/')[-1]
 
@@ -77,6 +75,9 @@ class APMDSHelper():
         login_information = req.post(login_url, data=json.dumps(self.__login_data), headers=accept_header, timeout=3)
         if login_information.status_code is 200:
           return json.loads(login_information.content.decode('UTF-8'))
+        else:
+          message = json.loads(login_information.content.decode('UTF-8'))
+          raise Exception('Try SSO Login Failed {}.'.format(message['message']))
       except Exception as e:
         raise Exception('login failed. error: {}'.format(e))
     raise Exception('Try SSO Login Failed {} times.'.format(counts))
