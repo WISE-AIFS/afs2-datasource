@@ -24,7 +24,8 @@ config_file = [
   'config/influx_internal.json',
   'config/influx_external.json',
   'config/s3_internal.json',
-  'config/s3_external.json'
+  'config/s3_external.json',
+  'config/apm_timerange.json'
 ]
 
 # read json file
