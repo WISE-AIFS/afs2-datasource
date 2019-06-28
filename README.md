@@ -1,5 +1,5 @@
 # AFS2-DataSource SDK
-The AFS2-DataSource SDK package allows developers to easily access PostgreSQL, MongoDB, InfluxDB.
+The AFS2-DataSource SDK package allows developers to easily access PostgreSQL, MongoDB, InfluxDB, S3 and APM.
 
 ## Installation
 Support Pyton version 3.6 or later
@@ -59,6 +59,7 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   collection=collection,
   querySql=querySql
 )
+
 # For InfluxDB
 manager = DBManager(db_type=constant.DB_TYPE['INFLUXDB'],
   username=username,
@@ -95,7 +96,7 @@ manager = DBManager(db_type=constant.DB_TYPE['APM'],
 ----
 <a name="connect"></a>
 #### DBManager.connect()
-Connect to PostgreSQL, MongoDB, InfluxDB, S3 with specified by the given config.
+Connect to PostgreSQL, MongoDB, InfluxDB, S3, APM with specified by the given config.
 ```python
 manager.connect()
 ```
@@ -150,6 +151,7 @@ df = manager.execute_query()
 4    35.0    7.0       2.0    8.0500  ...  1.0       0.0         36.0     2.0
 ...
 """
+
 # For S3
 is_success = manager.execute_query()
 # Return Boolean
