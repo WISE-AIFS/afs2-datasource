@@ -140,7 +140,7 @@ Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 ```python
 # For Postgres, MongoDB, InfluxDB and APM
 df = manager.execute_query()
-# Return type: DataFrame 
+# Return type: DataFrame
 """
       Age  Cabin  Embarked      Fare  ...  Sex  Survived  Ticket_info  Title2
 0    22.0    7.0       2.0    7.2500  ...  1.0       0.0          2.0     2.0
@@ -231,6 +231,21 @@ source='test.csv' # local file path
 destination='test_s3.csv' # the file path and name in s3
 manager.insert(table_name=bucket_name, source=source, destination=destination)
 ```
+---
+#### Use APM data source
+* Get Hist Raw data from SCADA Mongo data base
+* Required
+  - username: APM SSO username
+  - password: APM SSO password
+  - uri: mongo data base uri
+  - apmurl: APM api url
+  - machineIdList: APM machine Id list (**type:Array**)
+  - parameterList: APM parameter name list (**type:Array**)
+  - time range: Training date range
+    * example:
+    ```json
+    [{'start':'2019-05-01', 'end':'2019-05-31'}]
+    ```
 ----
 <a name="delete_file"></a>
 #### DBManager.delete_file(table_name, file_name)
@@ -297,7 +312,7 @@ manager.insert(table_name=table_name, columns=columns, records=records)
 
 # Execute querySql in DB config
 data = manager.execute_query()
-# Return type: DataFrame 
+# Return type: DataFrame
 """
       index  survived   age   embarked
 0         0         1   22.0       7.0
@@ -344,7 +359,7 @@ manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 # Download files in blob_list
 # Download all files in directory
 is_success = manager.execute_query()
-# Return type: Boolean 
+# Return type: Boolean
 
 # Check if file is exist or not
 is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
@@ -353,4 +368,18 @@ is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
 # Delete the file in Bucket and return if the file is deleted successfully
 is_success = manager.delete_file(table_name=bucket_name, file_name=s3_file)
 # Return type: Boolean
+```
+---
+
+## APM Data source example
+```python
+APMDSHelper(
+  username,
+  password,
+  apmurl,
+  machineIdList,
+  parameterList,
+  mongouri,
+  timeRange)
+APMDSHelper.execute()
 ```
