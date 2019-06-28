@@ -34,7 +34,7 @@ class InfluxHelper():
     if self._connection:
       self._connection.close()
 
-  def execute_query(self, querySql):
+  async def execute_query(self, querySql):
     data = self._connection.query(querySql)
     data = list(data.get_points())
     data = pd.DataFrame(data)

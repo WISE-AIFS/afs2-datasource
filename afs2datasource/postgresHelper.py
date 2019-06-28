@@ -37,7 +37,7 @@ class PostgresHelper():
       self._connection = None
       self._username = ''
   
-  def execute_query(self, querySql):
+  async def execute_query(self, querySql):
     cursor = self._connection.cursor()
     cursor.execute(querySql)
     columns = [desc[0] for desc in cursor.description]

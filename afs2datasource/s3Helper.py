@@ -47,7 +47,7 @@ class s3Helper():
   def disconnect(self):
     raise NotImplementedError('[S3 datasource] disconnect not implemented.')
   
-  def execute_query(self, query_list):
+  async def execute_query(self, query_list):
     is_success = True
     for query_obj in query_list:
       if query_obj.endswith('/'): # dir
