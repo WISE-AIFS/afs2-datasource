@@ -78,6 +78,19 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   blob_list=[file_name]
   # file_name can be directory `models/` or file `test.csv`
 )
+
+# For APM
+manager = DBManager(db_type=constant.DB_TYPE['APM'],
+  username=username,  # sso username
+  password=password,  # sso password
+  apmUrl=apmUrl,
+  machineIdList=[machineId],  # APM Machine Id
+  parameterList=[parameter],  # APM Parameter
+  mongouri=mongouri,
+  # timeRange or timeLast
+  timeRange=[{'start': start_ts, 'end': end_ts}],
+  timeLast={'lastDays:' lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+)
 ```
 ----
 <a name="connect"></a>
@@ -118,11 +131,14 @@ manager.get_dbtype()
 ----
 <a name="execute_query"></a>
 #### DBManager.execute_query()
-Return the result in PostgreSQL, MongoDB or InfluxDB after executing the querySql in config.
-Download files which is specified in blob_list in config, and return if all files downloaded is successfully.
+Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
+
+Download files which is specified in `blob_list` in config, and return if all files downloaded is successfully.
+
+Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
 ```python
-# For Postgres, MongoDB and InfluxDB
+# For Postgres, MongoDB, InfluxDB and APM
 df = manager.execute_query()
 # Return type: DataFrame 
 """
@@ -218,7 +234,7 @@ manager.insert(table_name=bucket_name, source=source, destination=destination)
 ----
 <a name="delete_file"></a>
 #### DBManager.delete_file(table_name, file_name)
-Delete file in bucket is S3 and return if the file is deleted successfully.
+Delete file in bucket in S3 and return if the file is deleted successfully.
 
 Note this function only support S3.
 
