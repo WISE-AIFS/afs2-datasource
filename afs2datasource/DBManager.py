@@ -15,6 +15,7 @@
 
 import os
 import json
+import base64
 import asyncio
 import pandas as pd
 import afs2datasource.constant as const

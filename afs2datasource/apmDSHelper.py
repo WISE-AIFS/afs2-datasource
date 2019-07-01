@@ -151,6 +151,8 @@ class APMDSHelper():
       self.data_container.append(data)
 
   def combine_data(self, container):
+    if len(container) == 0:
+      return pd.DataFrame()
     self.results = container[0]
     # time_stamp_index = None
     # for i, e in enumerate(container):
