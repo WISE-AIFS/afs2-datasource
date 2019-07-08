@@ -11,7 +11,7 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License. 
+#    under the License.
 
 import json
 import os
@@ -35,7 +35,7 @@ class APMDSHelper():
       self.apm_url = dataDir['data']['apmUrl']
       self.machine_list = dataDir['data']['machineIdList']
       self.parameter_list = dataDir['data']['parameterList']
-      self.__mongo_credentials = dataDir['data']['credentials']['uri']
+      self.__mongo_credentials = dataDir['data']['credential']['uri']
       if dataDir['data']['timeRange'] != []:
         self.time_range = dataDir['data']['timeRange']
       elif dataDir['data']['timeLast'] != []:

@@ -11,7 +11,7 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License. 
+#    under the License.
 
 import os
 import json
@@ -75,7 +75,7 @@ class DBManager:
           'parameterList': parameterList,
           'timeRange': timeRange,
           'timeLast': timeLast,
-          'credentials': {
+          'credential': {
             'uri': mongouri
           }
         }
@@ -112,7 +112,7 @@ class DBManager:
       raise AttributeError('No type in dataDir')
     if dbType not in const.DB_TYPE.values():
       raise ValueError('{0} is not support'.format(dbType))
-        
+
     self._status = const.DB_STATUS['DISCONNECTED']
     self._helper = self._create_helper(dbType)
     self._dbType = dbType
@@ -151,17 +151,17 @@ class DBManager:
   def disconnect(self):
     if self.is_connected():
       self._helper.disconnect()
-      self._status = const.DB_STATUS['DISCONNECTED']      
+      self._status = const.DB_STATUS['DISCONNECTED']
 
   def is_connected(self):
     return self._status == const.DB_STATUS['CONNECTED']
-  
+
   def is_connecting(self):
     return self._status == const.DB_STATUS['CONNECTING']
 
   def get_dbtype(self):
     return self._dbType
-  
+
   def execute_query(self):
     data = utils.get_data_from_dataDir()
     if not self.is_connected():
