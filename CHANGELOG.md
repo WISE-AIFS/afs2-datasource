@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.1.24] - 2019-07-30
+### Added
+- AzureBlobHelper
+
 ## [2.1.20] - 2019-07-01
 ### Added
 - APMDSHelper
