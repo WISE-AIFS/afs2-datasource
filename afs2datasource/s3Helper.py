@@ -25,24 +25,19 @@ class s3Helper():
     self._bucket = ''
 
   def connect(self):
-    try:
-      data = utils.get_data_from_dataDir()
-      endpoint, access_key, secret_key, bucket = utils.get_s3_credential(data)
-      if self._connection is None:
-        config = Config(signature_version='s3')
-        connection = boto3.client(
-          's3',
-          aws_access_key_id=access_key,
-          aws_secret_access_key=secret_key,
-          endpoint_url=endpoint,
-          config=config
-        )
-        self._connection = connection
-        self._bucket = bucket
-        return True
-    except Exception as e:
-      logging.error('[connect]: {}'.format(e))
-      return False
+    data = utils.get_data_from_dataDir()
+    endpoint, access_key, secret_key, bucket = utils.get_s3_credential(data)
+    if self._connection is None:
+      config = Config(signature_version='s3')
+      connection = boto3.client(
+        's3',
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        endpoint_url=endpoint,
+        config=config
+      )
+      self._connection = connection
+      self._bucket = bucket
   
   def disconnect(self):
     raise NotImplementedError('[S3 datasource] disconnect not implemented.')

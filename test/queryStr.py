@@ -25,7 +25,8 @@ config_file = [
   'config/influx_external.json',
   'config/s3_internal.json',
   'config/s3_external.json',
-  'config/apm_timerange.json'
+  'config/apm_timerange.json',
+  'config/azureblob.json'
 ]
 
 # read json file
@@ -43,6 +44,6 @@ for config in config_file:
   # query sql
   try:
     data = db.execute_query()
-    print(True)
+    print(data)
   except Exception as e:
     print(e)

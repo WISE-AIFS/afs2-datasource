@@ -5,3 +5,4 @@ influxdb==5.2.2
 boto3==1.9.156
 requests==2.22.0
 motor==2.0.0
+azure-storage-blob==2.0.1

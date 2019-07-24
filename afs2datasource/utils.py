@@ -65,6 +65,7 @@ def get_credential(credential):
     raise AttributeError('No database in credential')
   # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
   return username, password, host, port, database
+
 def get_s3_credential(data):
   credential = data.get('credential', {})
   endpoint = credential.get('endpoint', None)
@@ -81,3 +82,12 @@ def get_s3_credential(data):
     raise AttributeError('No bucketName in credential')
   return endpoint, access_key, secret_key, bucket
 
+def get_azure_blob_credential(data):
+  credential = data.get('credential', {})
+  account_name = credential.get('accountName', None)
+  account_key = credential.get('accountKey', None)
+  if not account_name:
+    raise AttributeError('No accountName in credential')
+  if not account_key:
+    raise AttributeError('No accountKey in credential')
+  return account_name, account_key

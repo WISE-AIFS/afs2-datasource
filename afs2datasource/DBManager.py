@@ -31,7 +31,7 @@ class DBManager:
     else:
       raise ValueError('No DB config.')
     self._status = const.DB_STATUS['DISCONNECTED']
-    self._helper = self._create_helper(self._dbType)
+    self._helper = self._create_helper(self._db_type)
     self.loop = asyncio.get_event_loop()
 
   def _get_credential_from_config(self, config):
@@ -80,6 +80,20 @@ class DBManager:
           }
         }
       }
+    elif db_type == const.DB_TYPE['AZUREBLOB']:
+      account_name = config.get('account_name', None)
+      account_key = config.get('account_key', None)
+      containers = config.get('containers', None)
+      dataDir = {
+        'type': db_type,
+        'data': {
+          'credential': {
+            'accountName': account_name,
+            'accountKey': account_key
+          },
+          'containers': containers
+        }
+      }
     else:
       username = config.get('username', None)
       password = config.get('password', None)
@@ -107,35 +121,38 @@ class DBManager:
   def _get_credential_from_env(self, dataDir):
     if type(dataDir) is str:
       dataDir = json.loads(dataDir)
-    dbType = dataDir.get('type', None)
-    if dbType is None:
+    db_type = dataDir.get('type', None)
+    if db_type is None:
       raise AttributeError('No type in dataDir')
-    if dbType not in const.DB_TYPE.values():
-      raise ValueError('{0} is not support'.format(dbType))
+    if db_type not in const.DB_TYPE.values():
+      raise ValueError('{0} is not support'.format(db_type))
 
     self._status = const.DB_STATUS['DISCONNECTED']
-    self._helper = self._create_helper(dbType)
-    self._dbType = dbType
+    self._helper = self._create_helper(db_type)
+    self._db_type = db_type
 
-  def _create_helper(self, dbType):
-    dbType = dbType.lower()
-    if dbType == const.DB_TYPE['MONGODB']:
+  def _create_helper(self, db_type):
+    db_type = db_type.lower()
+    if db_type == const.DB_TYPE['MONGODB']:
       import afs2datasource.mongoHelper as mongoHelper
       return mongoHelper.MongoHelper()
-    elif dbType == const.DB_TYPE['POSTGRES']:
+    elif db_type == const.DB_TYPE['POSTGRES']:
       import afs2datasource.postgresHelper as postgresHelper
       return postgresHelper.PostgresHelper()
-    elif dbType == const.DB_TYPE['INFLUXDB']:
+    elif db_type == const.DB_TYPE['INFLUXDB']:
       import afs2datasource.influxHelper as influxHelper
       return influxHelper.InfluxHelper()
-    elif dbType == const.DB_TYPE['S3']:
+    elif db_type == const.DB_TYPE['S3']:
       import afs2datasource.s3Helper as s3Helper
       return s3Helper.s3Helper()
-    elif dbType == const.DB_TYPE['APM']:
+    elif db_type == const.DB_TYPE['APM']:
       import afs2datasource.apmDSHelper as apmDSHelper
       return apmDSHelper.APMDSHelper()
+    elif db_type == const.DB_TYPE['AZUREBLOB']:
+      import afs2datasource.azureBlobHelper as azureBlobHelper
+      return azureBlobHelper.azureBlobHelper()
     else:
-      return None
+      raise ValueError('{} not support db_type'.format(db_type))
 
   def connect(self):
     try:
@@ -144,6 +161,7 @@ class DBManager:
       self._status = const.DB_STATUS['CONNECTING']
       self._helper.connect()
       self._status = const.DB_STATUS['CONNECTED']
+      return True
     except Exception as ex:
       self._status = const.DB_STATUS['DISCONNECTED']
       raise ex
@@ -160,16 +178,17 @@ class DBManager:
     return self._status == const.DB_STATUS['CONNECTING']
 
   def get_dbtype(self):
-    return self._dbType
+    return self._db_type
 
   def execute_query(self):
     data = utils.get_data_from_dataDir()
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    query = None
-    if self._dbType == const.DB_TYPE['S3']:
+    if self._db_type == const.DB_TYPE['S3']:
       query = data.get('blobList', [])
-    elif self._dbType == const.DB_TYPE['APM']:
+    elif self._db_type == const.DB_TYPE['AZUREBLOB']:
+      query = data.get('containers', [])
+    elif self._db_type == const.DB_TYPE['APM']:
       query = {
         'machine_list': data.get('machineIdList', []),
         'parameter_list': data.get('parameterList', []),
@@ -191,8 +210,8 @@ class DBManager:
     return self._helper.is_table_exist(table_name)
 
   def is_file_exist(self, table_name='', file_name=''):
-    if self._dbType != const.DB_TYPE['S3']:
-      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if self._db_type != const.DB_TYPE['S3'] and self._db_type != const.DB_TYPE['AZUREBLOB']:
+      raise NotImplementedError('{} not implemented is_file_exist.'.format(self._db_type))
     if not table_name:
       raise ValueError('table_name is necessary')
     if not file_name:
@@ -207,30 +226,38 @@ class DBManager:
     if self._helper.is_table_exist(table_name):
       raise ValueError('table_name is exist')
     columns = list(map(self._check_columns, columns))
-    self._helper.create_table(table_name=table_name, columns=columns)
+    try:
+      self._helper.create_table(table_name=table_name, columns=columns)
+      return True
+    except Exception as e:
+      raise Exception(e)
 
   def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
-    if not table_name:
-      raise ValueError('table_name is necessary')
-    if not self.is_connected():
-      raise RuntimeError('No connection.')
-    if not self._helper.is_table_exist(table_name) and self._dbType != const.DB_TYPE['INFLUXDB']:
-      raise ValueError('table_name is not exist')
-    if self._dbType == const.DB_TYPE['S3']:
-      if not source or not destination:
-        raise ValueError('source and destination is necessary')
-      if destination.endswith('/'):
-        raise ValueError('destination cannot end with "/"')
-      return self._helper.insert(table_name=table_name, source=source, destination=destination)
-    else:
-      records = [[None if pd.isnull(value) else value for value in record] for record in records]
-      return self._helper.insert(table_name=table_name, columns=columns, records=records)
+    try:
+      if not table_name:
+        raise ValueError('table_name is necessary')
+      if not self.is_connected():
+        raise RuntimeError('No connection.')
+      if not self._helper.is_table_exist(table_name) and self._db_type != const.DB_TYPE['INFLUXDB']:
+        raise ValueError('table_name is not exist')
+      if self._db_type == const.DB_TYPE['S3'] or self._db_type == const.DB_TYPE['AZUREBLOB']:
+        if not source or not destination:
+          raise ValueError('source and destination is necessary')
+        if destination.endswith('/'):
+          raise ValueError('destination cannot end with "/"')
+        self._helper.insert(table_name=table_name, source=source, destination=destination)
+        return True
+      else:
+        records = [[None if pd.isnull(value) else value for value in record] for record in records]
+        return self._helper.insert(table_name=table_name, columns=columns, records=records)
+    except Exception as e:
+      raise Exception(e)
 
   # def delete_table(self, table_name=''):
 
   def delete_file(self, table_name='', file_name=''):
-    if self._dbType != const.DB_TYPE['S3']:
-      raise NotImplementedError('{} not implemented.'.format(self._dbType))
+    if self._db_type != const.DB_TYPE['S3']:
+      raise NotImplementedError('{} not implemented.'.format(self._db_type))
     if not table_name:
       raise ValueError('table_name is necessary')
     if not file_name:

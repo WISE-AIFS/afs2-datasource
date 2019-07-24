@@ -2,7 +2,7 @@
 The AFS2-DataSource SDK package allows developers to easily access PostgreSQL, MongoDB, InfluxDB, S3 and APM.
 
 ## Installation
-Support Pyton version 3.6 or later
+Support Python version 3.6 or later
 ```
 pip install afs2-datasource
 ```
@@ -92,6 +92,19 @@ manager = DBManager(db_type=constant.DB_TYPE['APM'],
   timeRange=[{'start': start_ts, 'end': end_ts}],
   timeLast={'lastDays:' lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
 )
+
+# For Azure Blob
+manager = DBManager(db_type=constant.DB_TYPE['AZUREBLOB'],
+  access_key=access_key,
+  account_key=account_key,
+  containers=[{
+    'container': container_name,
+    'blobs': {
+      'files': ['file_name']
+      'folders': ['folder_name']
+    }
+  }]
+)
 ```
 ----
 <a name="connect"></a>
@@ -134,7 +147,7 @@ manager.get_dbtype()
 #### DBManager.execute_query()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
 
-Download files which is specified in `blob_list` in config, and return if all files downloaded is successfully.
+Download files which is specified in `blob_list` in S3 and Azure Blob config, and return if all files downloaded is successfully.
 
 Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
@@ -152,7 +165,7 @@ df = manager.execute_query()
 ...
 """
 
-# For S3
+# For S3 and Azure Blob
 is_success = manager.execute_query()
 # Return Boolean
 
@@ -162,7 +175,7 @@ is_success = manager.execute_query()
 #### DBManager.create_table(table_name, columns=[])
 Create table in database for Postgres, MongoDB and InfluxDB.
 
-Create Bucket in S3.
+Create Bucket/Container in S3/Azure Blob.
 
 Note: PostgreSQL table_name format **schema.table**
 ```python
@@ -176,7 +189,7 @@ columns = [
 ]
 manager.create_table(table_name=table_name, columns=columns)
 
-# For S3
+# For S3 and Azure Blob
 bucket_name = 'bucket'
 manager.create_table(table_name=bucket_name)
 ```
@@ -185,25 +198,25 @@ manager.create_table(table_name=bucket_name)
 #### DBManager.is_table_exist(table_name)
 Return if the table is exist in Postgres, MongoDB or Influxdb.
 
-Return if the bucket is exist in S3.
+Return if the bucket is exist in S3 and Azure Blob.
 
 ```python
 # For Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 manager.is_table_exist(table_name=table_name)
 
-# For S3
+# For S3 and Azure Blob
 bucket_name = 'bucket'
 manager.is_table_exist(table_name=bucket_name)
 ```
 ----
 <a name="is_file_exist"></a>
 #### DBManager.is_file_exist(table_name, file_name)
-Return if the file is exist in Bucket in S3.
+Return if the file is exist in Bucket in S3 and Azure Blob.
 
-Note this function only support S3.
+Note this function only support S3 and Azure Blob.
 ```python
-# For S3
+# For S3 and Azure Blob
 bucket_name = 'bucket'
 file_name = 'test.csv
 manager.is_file_exist(table_name=bucket_name, file_name=file_name)
@@ -214,7 +227,7 @@ manager.is_file_exist(table_name=bucket_name, file_name=file_name)
 #### DBManager.insert(table_name, columns=[], records=[], source='', destination='')
 Insert records into table in Postgres, MongoDB or InfluxDB.
 
-Upload file to S3
+Upload file to S3 and Azure Blob.
 
 ```python
 # For Postgres, MongoDB and InfluxDB
@@ -232,6 +245,12 @@ bucket_name = 'bucket'
 source='test.csv' # local file path
 destination='test_s3.csv' # the file path and name in s3
 manager.insert(table_name=bucket_name, source=source, destination=destination)
+
+# For Azure Blob
+container_name = 'container'
+source='test.csv' # local file path
+destination='test_s3.csv' # the file path and name in s3
+manager.insert(table_name=container_name, source=source, destination=destination)
 ```
 ---
 #### Use APM data source
@@ -326,7 +345,7 @@ data = manager.execute_query()
 # Disconnect to DB
 manager.disconnect()
 ```
-
+---
 ## S3 Example
 
 ```python
@@ -384,4 +403,50 @@ APMDSHelper(
   mongouri,
   timeRange)
 APMDSHelper.execute()
+```
+---
+
+## Azure Blob Example
+
+```python
+from afs2datasource import DBManager, constant
+
+# Init DBManager
+manager = DBManager(
+ db_type=constant.DB_TYPE['AZUREBLOB'],
+ access_key={ACCESS_KEY},
+ access_name={ACCESS_NAME}
+ containers=[{
+   'container': {CONTAINER_NAME},
+   'blobs': {
+     'files': ['titanic.csv', 'models/train.csv'],
+     'folders': ['test/']
+   }
+ }]
+)
+
+# Connect Azure Blob
+manager.connect()
+
+# Check is the container is exist
+container_name = 'container'
+manager.is_table_exist(table_name=container_name)
+# Return type: boolean
+
+# Create container
+manager.create_table(table_name=container_name)
+
+# Upload File to Azure Blob
+local_file = '../test.csv'
+azure_file = 'dataset/test.csv'
+manager.insert(table_name=container_name, source=local_file, destination=azure_file)
+
+# Download files in `containers`
+# Download all files in directory
+is_success = manager.execute_query()
+# Return type: Boolean
+
+# Check if file is exist in container or not
+is_exist = manager.is_file_exist(table_name=container_name, file_name=azure_file)
+# Return type: Boolean
 ```
