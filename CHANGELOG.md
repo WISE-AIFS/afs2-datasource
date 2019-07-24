@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [2.1.24] - 2019-07-30
+## [2.1.23] - 2019-07-24
 ### Added
 - AzureBlobHelper
 
