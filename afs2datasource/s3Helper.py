@@ -14,10 +14,12 @@
 #    under the License. 
 
 import os
+import boto3
+import asyncio
 import logging
 import afs2datasource.utils as utils
-import boto3
 from botocore.client import Config
+from botocore.exceptions import ClientError
 
 class s3Helper():
   def __init__(self):
@@ -26,7 +28,7 @@ class s3Helper():
 
   def connect(self):
     data = utils.get_data_from_dataDir()
-    endpoint, access_key, secret_key, bucket = utils.get_s3_credential(data)
+    endpoint, access_key, secret_key= utils.get_s3_credential(data)
     if self._connection is None:
       config = Config(signature_version='s3')
       connection = boto3.client(
@@ -37,60 +39,79 @@ class s3Helper():
         config=config
       )
       self._connection = connection
-      self._bucket = bucket
   
   def disconnect(self):
     raise NotImplementedError('[S3 datasource] disconnect not implemented.')
   
   async def execute_query(self, query_list):
-    is_success = True
-    for query_obj in query_list:
-      if query_obj.endswith('/'): # dir
+    response = await asyncio.gather(*[self._generate_download_list(query) for query in query_list])
+    file_list = []
+    for res in response:
+      file_list += res
+    await asyncio.gather(*[self._download_file(file) for file in file_list])
+    return True    
+
+  async def _generate_download_list(self, query):
+    response = []
+    bucket_name = query['bucket']
+    blob = query['blobs']
+    if 'files' in blob:
+      if not isinstance(blob['files'], (list, )):
+        if not blob['files']:
+          blob['files'] = []
+        else:
+          blob['files'] = [blob['files']]
+      response += list(map(lambda file: {'bucket': bucket_name, 'file': file}, blob['files']))
+    if 'folders' in blob:
+      if not isinstance(blob['folders'], (list, )):
+        if not blob['folders']:
+          blob['folders'] = []
+        else:
+          blob['folders'] = [blob['folders']]
+      for folder in blob['folders']:
         try:
-          response = self._connection.list_objects(
-            Bucket=self._bucket,
-            Prefix=query_obj
-          )
-          for obj in response['Contents'][::-1]:
-            if obj['Key'] != query_obj:
-              query_list.append(obj['Key'])
-          if not os.path.exists(query_obj):
-              os.makedirs(query_obj)
+          if not folder.endswith('/'):
+            folder = '{}/'.format(folder)
+          re = self._connection.list_objects(Bucket=bucket_name, Prefix=folder)
+          if 'Contents' in re:
+            for obj in re['Contents']:
+              if obj['Key'] != folder:
+                response.append({
+                  'bucket': bucket_name,
+                  'file': obj['Key']
+                })
         except Exception as e:
-          logging.error('[execute_query]: {}'.format(e))
-          is_success = False
-      else:
-        split_list = query_obj.rsplit('/', 1)
-        folder = split_list[0] if len(split_list) > 1 else ''
-        filename = split_list[-1]
-        try:
-          if folder and not os.path.exists(folder):
-            os.makedirs(folder)
-          if os.path.exists(query_obj) and os.path.isdir(query_obj):
-            logging.error('[execute_query]: file {} is exist'.format(filename))
-            is_success = False
-            continue
-          obj = self._connection.get_object(Bucket=self._bucket, Key=query_obj)
-          with open(query_obj, 'wb') as f:
-            while f.write(obj['Body'].read()):
-              pass
-        except FileExistsError:
-          logging.error('[execute_query]: file {} is exist'.format(filename))
-          is_success = False
-        except FileNotFoundError:
-          logging.error('[execute_query]: No such file or directory {}'.format(query_obj))
-          is_success = False
-        except Exception as e:
-          if 'response' in e and e.response['Error']['Code'] == 'NoSuchKey':
-            logging.error('[execute_query]: file {} not exist'.format(query_obj))
-          else:
-            logging.error('[execute_query]: {}'.format(e))
-          is_success = False
-    return is_success
-  
+          Exception(e.response['Error']['Message'])
+    return response            
+
+  async def _download_file(self, file):
+    try:
+      file_path = os.path.join(file['bucket'], file['file'])
+      if not os.path.exists(file['bucket']):
+        os.makedirs(file['bucket'])
+      if '/' in file_path:  # dir
+        folder, _ = os.path.split('{}'.format(file_path))
+        if not os.path.exists(folder) or (os.path.exists(folder) and not os.path.isdir(folder)):
+          os.makedirs(folder)
+      obj = self._connection.get_object(Bucket=file['bucket'], Key=file['file'])
+      with open(file_path, 'wb') as f:
+        while f.write(obj['Body'].read()):
+          pass
+    except ClientError as e:
+      raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
+    except Exception as e:
+      raise e
+
   def check_query(self, query_list):
-    if not isinstance(query_list, (list, )) or len(query_list) == 0:
-      raise ValueError('blobList is invalid')
+    if not isinstance(query_list, (list, )):
+      query_list = [query_list]
+    if len(query_list) == 0:
+      raise ValueError('buckets is invalid')
+    for query in query_list:
+      if 'bucket' not in query:
+        raise ValueError('bucket is necessary')
+      if 'blobs' not in query:
+        raise ValueError('blobs is necessary')
     return query_list
 
   def is_table_exist(self, table_name):
@@ -99,8 +120,7 @@ class s3Helper():
       bucket_list = [bucket['Name'] for bucket in self._connection.list_buckets()['Buckets']]
       return table_name in bucket_list
     except Exception as e:
-      logging.error('[Is Table Exist]: {}'.format(e))
-      return False
+      raise Exception(e.response['Error']['Message'])
 
   def is_file_exist(self, table_name, file_name):
     try:
@@ -113,35 +133,22 @@ class s3Helper():
       if e.response['Error']['Code'] == '404':
         return False
       else:
-        raise e
+        raise Exception(e.response['Error']['Message'])
 
   def create_table(self, table_name, columns):
     try:
       self._connection.create_bucket(Bucket=table_name)
+      return True
     except Exception as e:
-      logging.error('[Create Table]: {}'.format(e))
-      return False
-    return True
+      raise Exception(e.response['Error']['Message'])
 
   def insert(self, table_name, source, destination):
     try:
-      response = self._connection.head_object(
-        Bucket=table_name,
-        Key=destination
-      )
-      logging.error('[Insert]: file {} is exist'.format(destination))
-      return False
+      with open(source, 'rb') as data:
+        self._connection.upload_fileobj(Fileobj=data, Bucket=table_name, Key=destination)
+      return True
     except Exception as e:
-      if e.response['Error']['Code'] == '404':
-        try:
-          with open(source, 'rb') as data:
-            self._connection.upload_fileobj(Fileobj=data, Bucket=table_name, Key=destination)
-        except Exception as e:
-          logging.error('[Insert]: {}'.format(e))
-          return False
-        return True
-      else:
-        logging.error('[Insert]: {}'.format(e))
+      raise Exception(e.response['Error']['Message'])
 
   def delete_file(self, table_name, file_name):
     self._connection.delete_object(

@@ -75,8 +75,13 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   endpoint=endpoint,
   access_key=access_key,
   secret_key=secret_key,
-  bucket_name=bucket_name,
-  blob_list=[file_name]
+  buckets=[{
+    'bucket': 'bucket_name',
+    'blobs': {
+      'files': ['file_name'],
+      'folders': ['folder_name']
+    }
+  }]
   # file_name can be directory `models/` or file `test.csv`
 )
 
@@ -95,7 +100,7 @@ manager = DBManager(db_type=constant.DB_TYPE['APM'],
 
 # For Azure Blob
 manager = DBManager(db_type=constant.DB_TYPE['AZUREBLOB'],
-  access_key=access_key,
+  account_name=account_name,
   account_key=account_key,
   containers=[{
     'container': container_name,
@@ -147,7 +152,7 @@ manager.get_dbtype()
 #### DBManager.execute_query()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
 
-Download files which is specified in `blob_list` in S3 and Azure Blob config, and return if all files downloaded is successfully.
+Download files which is specified in `buckets` in S3 config or `containers` in Azure Blob config, and return if all files downloaded is successfully.
 
 Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
@@ -189,37 +194,54 @@ columns = [
 ]
 manager.create_table(table_name=table_name, columns=columns)
 
-# For S3 and Azure Blob
+# For S3
 bucket_name = 'bucket'
 manager.create_table(table_name=bucket_name)
+
+# For Azure Blob
+container_name = 'container'
+manager.create_table(table_name=container_name)
 ```
 ----
 <a name="is_table_exist"></a>
 #### DBManager.is_table_exist(table_name)
 Return if the table is exist in Postgres, MongoDB or Influxdb.
 
-Return if the bucket is exist in S3 and Azure Blob.
+Return if the bucket is exist in S3.
+
+Return if the container is exist in Azure Blob.
 
 ```python
 # For Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 manager.is_table_exist(table_name=table_name)
 
-# For S3 and Azure Blob
+# For S3
 bucket_name = 'bucket'
 manager.is_table_exist(table_name=bucket_name)
+
+# For Azure blob
+container_name = 'container'
+manager.is_table_exist(table_name=container_name)
 ```
 ----
 <a name="is_file_exist"></a>
 #### DBManager.is_file_exist(table_name, file_name)
-Return if the file is exist in Bucket in S3 and Azure Blob.
+Return if the file is exist in bucket in S3.
+Return if the file is exist in container in Azure Blob.
 
 Note this function only support S3 and Azure Blob.
 ```python
-# For S3 and Azure Blob
+# For S3
 bucket_name = 'bucket'
 file_name = 'test.csv
 manager.is_file_exist(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
+
+# For Azure Blob
+container_name = 'container'
+file_name = 'test.csv
+manager.is_file_exist(table_name=container_name, file_name=file_name)
 # Return: Boolean
 ```
 ----
@@ -249,7 +271,7 @@ manager.insert(table_name=bucket_name, source=source, destination=destination)
 # For Azure Blob
 container_name = 'container'
 source='test.csv' # local file path
-destination='test_s3.csv' # the file path and name in s3
+destination='test_s3.csv' # the file path and name in Azure blob
 manager.insert(table_name=container_name, source=source, destination=destination)
 ```
 ---
@@ -353,12 +375,17 @@ from afs2datasource import DBManager, constant
 
 # Init DBManager
 manager = DBManager(
- db_type = constant.DB_TYPE['S3'],
- endpoint={ENDPOINT},
- access_key={ACCESSKEY},
- secret_key={SECRETKEY},
- bucket_name={BUCKET_NAME},
- blob_list=['models/', 'dataset/train.csv']
+  db_type = constant.DB_TYPE['S3'],
+  endpoint={ENDPOINT},
+  access_key={ACCESSKEY},
+  secret_key={SECRETKEY},
+  buckets=[{
+    'bucket': {BUCKET_NAME},
+    'blobs': {
+      'files': ['dataset/train.csv'],
+      'folders': ['models/']
+    }
+  }]
 )
 
 # Connect S3
@@ -414,8 +441,8 @@ from afs2datasource import DBManager, constant
 # Init DBManager
 manager = DBManager(
  db_type=constant.DB_TYPE['AZUREBLOB'],
- access_key={ACCESS_KEY},
- access_name={ACCESS_NAME}
+ account_key={ACCESS_KEY},
+ account_name={ACCESS_NAME}
  containers=[{
    'container': {CONTAINER_NAME},
    'blobs': {

@@ -41,13 +41,11 @@ class DBManager:
       endpoint = config.get('endpoint', None)
       access_key = config.get('access_key', None)
       secret_key = config.get('secret_key', None)
-      bucket_name = config.get('bucket_name', None)
-      blobList = config.get('blob_list', None)
+      buckets = config.get('buckets', None)
       dataDir = {
         'type': db_type,
         'data': {
-          'blobList': blobList,
-          'bucketName': bucket_name,
+          'buckets': buckets,
           'credential': {
             'accessKey': access_key,
             'endpoint': endpoint,
@@ -185,7 +183,7 @@ class DBManager:
     if not self.is_connected():
       raise RuntimeError('No connection.')
     if self._db_type == const.DB_TYPE['S3']:
-      query = data.get('blobList', [])
+      query = data.get('buckets', [])
     elif self._db_type == const.DB_TYPE['AZUREBLOB']:
       query = data.get('containers', [])
     elif self._db_type == const.DB_TYPE['APM']:
