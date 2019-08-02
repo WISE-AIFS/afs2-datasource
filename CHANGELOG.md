@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## [2.1.25] - 2019-08-06
+### Changed
+- S3Helper
+  - config
+
 ## [2.1.23] - 2019-07-24
 ### Added
 - AzureBlobHelper
