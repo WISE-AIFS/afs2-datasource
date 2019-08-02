@@ -147,6 +147,8 @@ class s3Helper():
       with open(source, 'rb') as data:
         self._connection.upload_fileobj(Fileobj=data, Bucket=table_name, Key=destination)
       return True
+    except FileNotFoundError as e:
+      raise Exception('FileNotFound: {}'.format(source))
     except Exception as e:
       raise Exception(e.response['Error']['Message'])
 
