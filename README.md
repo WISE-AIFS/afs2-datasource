@@ -7,6 +7,17 @@ Support Python version 3.6 or later
 pip install afs2-datasource
 ```
 
+## Notice
+AFS2-DataSource SDK uses `asyncio` package, and Jupyter kernel is also using `asyncio` and running an event loop, but these loops can’t be nested.
+(https://github.com/jupyter/notebook/issues/3397)
+
+If using AFS2-DataSource SDK in Jupyter Notebook, please add the following codes to resolve this issue:
+```python
+!pip instal nest_asyncio
+import nest_asyncio
+nest_asyncio.apply()
+```
+
 ## API
 ### DBManager
 + <a href="#init"><code>Init DBManager</code></a>
@@ -46,7 +57,7 @@ manager = DBManager(db_type=constant.DB_TYPE['POSTGRES'],
   host=host,
   port=port,
   database=database,
-  querySql=querySql
+  querySql="select {field} from {schema}.{table}"
 )
 
 # For MongoDB
@@ -57,7 +68,7 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   port=port,
   database=database,
   collection=collection,
-  querySql=querySql
+  querySql="{"{key}": {value}}"
 )
 
 # For InfluxDB
@@ -67,7 +78,7 @@ manager = DBManager(db_type=constant.DB_TYPE['INFLUXDB'],
   host=host,
   port=port,
   database=database,
-  querySql=querySql
+  querySql="select {field_key} from {measurement_name}"
 )
 
 # For S3
@@ -82,7 +93,6 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
       'folders': ['folder_name']
     }
   }]
-  # file_name can be directory `models/` or file `test.csv`
 )
 
 # For APM
