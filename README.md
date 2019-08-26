@@ -13,7 +13,7 @@ AFS2-DataSource SDK uses `asyncio` package, and Jupyter kernel is also using `as
 
 If using AFS2-DataSource SDK in Jupyter Notebook, please add the following codes to resolve this issue:
 ```python
-!pip instal nest_asyncio
+!pip install nest_asyncio
 import nest_asyncio
 nest_asyncio.apply()
 ```
