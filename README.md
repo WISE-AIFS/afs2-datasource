@@ -8,7 +8,7 @@ pip install afs2-datasource
 ```
 
 ## Notice
-AFS2-DataSource SDK uses `asyncio` package, and Jupyter kernel is also using `asyncio` and running an event loop, but these loops can’t be nested.
+AFS2-DataSource SDK uses `asyncio` package, and Jupyter kernel is also using `asyncio` and running an event loop, but these loops can't be nested.
 (https://github.com/jupyter/notebook/issues/3397)
 
 If using AFS2-DataSource SDK in Jupyter Notebook, please add the following codes to resolve this issue:
@@ -162,7 +162,7 @@ manager.get_dbtype()
 #### DBManager.execute_query()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
 
-Download files which is specified in `buckets` in S3 config or `containers` in Azure Blob config, and return if all files downloaded is successfully.
+Download files which is specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of array.
 
 Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
@@ -180,9 +180,19 @@ df = manager.execute_query()
 ...
 """
 
-# For S3 and Azure Blob
-is_success = manager.execute_query()
-# Return Boolean
+# For Azure Blob
+container_names = manager.execute_query()
+# Return Array
+"""
+['container1', 'container2']
+"""
+
+# For S3
+bucket_names = manager.execute_query()
+# Return Array
+"""
+['bucket1', 'bucket2']
+"""
 
 ```
 ----
@@ -416,8 +426,8 @@ manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 
 # Download files in blob_list
 # Download all files in directory
-is_success = manager.execute_query()
-# Return type: Boolean
+bucket_names = manager.execute_query()
+# Return type: Array
 
 # Check if file is exist or not
 is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
@@ -480,8 +490,8 @@ manager.insert(table_name=container_name, source=local_file, destination=azure_f
 
 # Download files in `containers`
 # Download all files in directory
-is_success = manager.execute_query()
-# Return type: Boolean
+container_names = manager.execute_query()
+# Return type: Array
 
 # Check if file is exist in container or not
 is_exist = manager.is_file_exist(table_name=container_name, file_name=azure_file)

@@ -49,7 +49,7 @@ class s3Helper():
     for res in response:
       file_list += res
     await asyncio.gather(*[self._download_file(file) for file in file_list])
-    return True    
+    return list(set([file_obj['bucket'] for file_obj in file_list]))    
 
   async def _generate_download_list(self, query):
     response = []

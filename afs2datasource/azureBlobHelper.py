@@ -45,7 +45,7 @@ class azureBlobHelper():
   async def execute_query(self, query_list):
     query_list = self._generate_download_list(query_list)
     await asyncio.gather(*[self._download_file(query) for query in query_list])
-    return True
+    return list(set([query['container'] for query in query_list]))
 
   def _generate_download_list(self, query_list):
     response = []
