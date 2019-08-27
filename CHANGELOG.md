@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.1.27] - 2019-08-27
+### Changed
+- S3Helper & AzureBlobHelper
+    - execute_query()
 
 ## [2.1.25] - 2019-08-06
 ### Changed
