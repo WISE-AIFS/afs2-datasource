@@ -33,8 +33,10 @@ class APMDSHelper():
         dataDir = json.loads(dataDir)
       self.__login_data = {"userName": dataDir['data']['username'], "password": dataDir['data']['password']}
       self.apm_url = dataDir['data']['apmUrl']
-      self.machine_list = dataDir['data']['machineIdList']
-      self.parameter_list = dataDir['data']['parameterList']
+      # self.machine_list = dataDir['data']['machineIdList']
+      self.machine_list = self.apm_config_filter(dataDir['data']['apm_config'], 'machine_id')
+      # self.parameter_list = dataDir['data']['apm_config']['parameters']
+      self.parameter_list = self.apm_config_filter(dataDir['data']['apm_config'], 'parameter')
       self.__mongo_credentials = dataDir['data']['credential']['uri']
       if dataDir['data']['timeRange'] != []:
         self.time_range = dataDir['data']['timeRange']
@@ -47,6 +49,20 @@ class APMDSHelper():
         "Environment parameters need apm_username={username}, apm_password={password}, apm_url={apmUrl}, machine_id_list={machineIdList}, parameter_list={parameterList}, mongo_uri={mongouri} and time_range={timeRange}".format(
             username=self.__login_data['userName'], password=self.__login_data['password'], apmUrl=self.apm_url, machineIdList=self.machine_list, parameterList=self.parameter_list, mongouri=self.__mongo_credentials, timeRange=self.time_range)
       )
+
+  def apm_config_filter(self, apm_config, select_type):
+    if select_type is 'machine_id':
+      machine_id_list = []
+      for i, e in enumerate(apm_config):
+        for m_i, m_e in enumerate(e['machines']):
+          machine_id_list.append(m_e['id'])
+      return machine_id_list
+    elif select_type is 'parameter':
+      parameter_list = []
+      for i, e in enumerate(apm_config):
+        for p_i, p_e in enumerate(e['parameters']):
+          parameter_list.append(p_e)
+      return parameter_list
 
   def connect(self):
     if self._connection is None:
@@ -154,11 +170,6 @@ class APMDSHelper():
     if len(container) == 0:
       return pd.DataFrame()
     self.results = container[0]
-    # time_stamp_index = None
-    # for i, e in enumerate(container):
-    #   if "Time_Stamp" in e.columns[1] and "Time_Stamp_ms" not in e.columns[1]:
-    #     self.results = container[i]
-    #     time_stamp_index = i
     for contain in range(len(container)):
       if contain == 0:
         continue

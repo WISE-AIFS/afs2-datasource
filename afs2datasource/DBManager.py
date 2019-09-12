@@ -58,11 +58,17 @@ class DBManager:
       password = config.get('password', None)
       password = base64.b64encode(password.encode('UTF-8')).decode('UTF-8')
       apmUrl = config.get('apmUrl', None)
-      machineIdList = config.get('machineIdList', None)
-      parameterList = config.get('parameterList', None)
+      # machineIdList = config.get('machineIdList', None)
+      machineIdList = self.apm_ds_filter(config.get('apm_config'), 'machine_id')
+      # parameterList = config.get('parameterList', None)
+      parameterList = self.apm_ds_filter(config.get('apm_config'), 'parameters')
       mongouri = config.get('mongouri', None)
       timeRange = config.get('timeRange', None)
       timeLast = config.get('timeLast',None)
+      if len(machineIdList) is 0:
+        machineIdList = None
+      if len(parameterList) is 0:
+        parameterList = None
       dataDir = {
         'type': db_type,
         'data': {
@@ -188,8 +194,10 @@ class DBManager:
       query = data.get('containers', [])
     elif self._db_type == const.DB_TYPE['APM']:
       query = {
-        'machine_list': data.get('machineIdList', []),
-        'parameter_list': data.get('parameterList', []),
+        # 'machine_list': data.get('machineIdList', []),
+        'machine_list': self.apm_ds_filter(data.get('apm_config'), 'machine_id'),
+        # 'parameter_list': data.get('parameterList', []),
+        'parameter_list': self.apm_ds_filter(data.get('apm_config'), 'parameters'),
         'time_range': data.get('timeRange', []),
         'time_last': data.get('timeLast', [])
       }
@@ -199,6 +207,20 @@ class DBManager:
         raise AttributeError('No querySql in dataDir[data]')
     query = self._helper.check_query(query)
     return self.loop.run_until_complete(self._helper.execute_query(query))
+
+  def apm_ds_filter(self, apm_config, select_type):
+    if select_type is 'machine_id':
+      machine_id_list = []
+      for i, e in enumerate(apm_config):
+        for m_i, m_e in enumerate(e['machines']):
+          machine_id_list.append(m_e['id'])
+      return machine_id_list
+    elif select_type is 'parameters':
+      parameter_list = []
+      for i, e in enumerate(apm_config):
+        for p_i, p_e in enumerate(e['parameters']):
+          parameter_list.append(p_e)
+      return parameter_list
 
   def is_table_exist(self, table_name=None):
     if table_name is None:

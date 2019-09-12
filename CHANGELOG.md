@@ -1,5 +1,8 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+## [2.1.28] - 2019-09-12
+### Feature
+- Sync apm configuration with afs portal and os environment (for demo only)
 
 ## [2.1.27] - 2019-08-27
 ### Changed
