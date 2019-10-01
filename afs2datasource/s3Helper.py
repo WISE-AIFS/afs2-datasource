@@ -18,6 +18,7 @@ import boto3
 import asyncio
 import logging
 import afs2datasource.utils as utils
+from botocore.utils import is_valid_endpoint_url
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
@@ -28,15 +29,18 @@ class s3Helper():
 
   def connect(self):
     data = utils.get_data_from_dataDir()
-    endpoint, access_key, secret_key= utils.get_s3_credential(data)
+    endpoint, access_key, secret_key, is_verify = utils.get_s3_credential(data)
     if self._connection is None:
+      if not is_valid_endpoint_url(endpoint):
+        raise ValueError('Invalid endpoint: {}'.format(endpoint))
       config = Config(signature_version='s3')
       connection = boto3.client(
         's3',
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
         endpoint_url=endpoint,
-        config=config
+        config=config,
+        verify=is_verify
       )
       self._connection = connection
   

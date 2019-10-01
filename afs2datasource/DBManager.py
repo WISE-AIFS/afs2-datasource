@@ -42,6 +42,7 @@ class DBManager:
       access_key = config.get('access_key', None)
       secret_key = config.get('secret_key', None)
       buckets = config.get('buckets', None)
+      is_verify = config.get('is_verify', False)
       dataDir = {
         'type': db_type,
         'data': {
@@ -49,7 +50,8 @@ class DBManager:
           'credential': {
             'accessKey': access_key,
             'endpoint': endpoint,
-            'secretKey': secret_key
+            'secretKey': secret_key,
+            'is_verify': is_verify
           }
         }
       }

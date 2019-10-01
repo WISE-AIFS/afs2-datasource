@@ -7,6 +7,11 @@ Support Python version 3.6 or later
 pip install afs2-datasource
 ```
 
+## Development
+```
+pip install -e .
+```
+
 ## Notice
 AFS2-DataSource SDK uses `asyncio` package, and Jupyter kernel is also using `asyncio` and running an event loop, but these loops can't be nested.
 (https://github.com/jupyter/notebook/issues/3397)
@@ -86,6 +91,7 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   endpoint=endpoint,
   access_key=access_key,
   secret_key=secret_key,
+  is_verify=False,
   buckets=[{
     'bucket': 'bucket_name',
     'blobs': {

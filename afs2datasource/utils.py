@@ -71,6 +71,7 @@ def get_s3_credential(data):
   endpoint = credential.get('endpoint', None)
   access_key = credential.get('accessKey', None)
   secret_key = credential.get('secretKey', None)
+  is_verify = credential.get('is_verify', False)
   if not endpoint:
     raise AttributeError('No endpoint in credential')
   if not access_key:
