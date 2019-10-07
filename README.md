@@ -36,6 +36,7 @@ nest_asyncio.apply()
 + <a href="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
 + <a href="#is_file_exist"><code>DBManager.<b>is_file_exist(table_name, file_name)</b></code></a>
 + <a href="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
++ <a href="#delete_table"><code>DBManager.<b>delete_table(table_name)</b></code></a>
 + <a href="#delete_file"><code>DBManager.<b>delete_file(table_name, file_name)</b></code></a>
 ----
 <a name="init"></a>
@@ -205,6 +206,7 @@ bucket_names = manager.execute_query()
 <a name="create_table"></a>
 #### DBManager.create_table(table_name, columns=[])
 Create table in database for Postgres, MongoDB and InfluxDB.
+Noted, to create a new measurement in influxdb simply insert data into the measurement.
 
 Create Bucket/Container in S3/Azure Blob.
 
@@ -316,6 +318,31 @@ manager.insert(table_name=container_name, source=source, destination=destination
     [{'start':'2019-05-01', 'end':'2019-05-31'}]
     ```
 ----
+<a name="delete_table"></a>
+#### DBManager.delete_table(table_name)
+Delete table in Postgres, MongoDB or InfluxDB, and return if the table is deleted successfully.
+
+Delete the bucket in S3 and return if the table is deleted successfully.
+
+Delete the container in Azure Blob and return if the table is deleted successfully.
+
+```python
+# For Postgres, MongoDB or InfluxDB
+table_name = 'titanic'
+is_success = manager.delete_table(table_name=table_name)
+# Return: Boolean
+
+# For S3
+bucket_name = 'bucket'
+is_success = manager.delete_table(table_name=bucket_name)
+# Return: Boolean
+
+# For Azure Blob
+container_name = 'container'
+is_success = manager.delete_table(table_name=container_name)
+# Return: Boolean
+```
+----
 <a name="delete_file"></a>
 #### DBManager.delete_file(table_name, file_name)
 Delete file in bucket in S3 and return if the file is deleted successfully.
@@ -390,6 +417,10 @@ data = manager.execute_query()
 ...
 """
 
+# Delete Table
+is_success = db.delete_table(table_name=table_name)
+# Return type: Boolean
+
 # Disconnect to DB
 manager.disconnect()
 ```
@@ -441,6 +472,10 @@ is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
 
 # Delete the file in Bucket and return if the file is deleted successfully
 is_success = manager.delete_file(table_name=bucket_name, file_name=s3_file)
+# Return type: Boolean
+
+# Delete Bucket
+is_success = manager.delete_table(table_name=bucket_name)
 # Return type: Boolean
 ```
 ---
@@ -501,5 +536,9 @@ container_names = manager.execute_query()
 
 # Check if file is exist in container or not
 is_exist = manager.is_file_exist(table_name=container_name, file_name=azure_file)
+# Return type: Boolean
+
+# Delete Container
+is_success = manager.delete_table(table_name=container_name)
 # Return type: Boolean
 ```

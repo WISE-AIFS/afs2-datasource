@@ -61,9 +61,9 @@ class DBManager:
       password = base64.b64encode(password.encode('UTF-8')).decode('UTF-8')
       apmUrl = config.get('apmUrl', None)
       # machineIdList = config.get('machineIdList', None)
-      machineIdList = self.apm_ds_filter(config.get('apm_config'), 'machine_id')
+      machineIdList = self._apm_ds_filter(config.get('apm_config'), 'machine_id')
       # parameterList = config.get('parameterList', None)
-      parameterList = self.apm_ds_filter(config.get('apm_config'), 'parameters')
+      parameterList = self._apm_ds_filter(config.get('apm_config'), 'parameters')
       mongouri = config.get('mongouri', None)
       timeRange = config.get('timeRange', None)
       timeLast = config.get('timeLast',None)
@@ -197,9 +197,9 @@ class DBManager:
     elif self._db_type == const.DB_TYPE['APM']:
       query = {
         # 'machine_list': data.get('machineIdList', []),
-        'machine_list': self.apm_ds_filter(data.get('apm_config'), 'machine_id'),
+        'machine_list': self._apm_ds_filter(data.get('apm_config'), 'machine_id'),
         # 'parameter_list': data.get('parameterList', []),
-        'parameter_list': self.apm_ds_filter(data.get('apm_config'), 'parameters'),
+        'parameter_list': self._apm_ds_filter(data.get('apm_config'), 'parameters'),
         'time_range': data.get('timeRange', []),
         'time_last': data.get('timeLast', [])
       }
@@ -210,7 +210,7 @@ class DBManager:
     query = self._helper.check_query(query)
     return self.loop.run_until_complete(self._helper.execute_query(query))
 
-  def apm_ds_filter(self, apm_config, select_type):
+  def _apm_ds_filter(self, apm_config, select_type):
     if select_type is 'machine_id':
       machine_id_list = []
       for i, e in enumerate(apm_config):
@@ -232,8 +232,6 @@ class DBManager:
     return self._helper.is_table_exist(table_name)
 
   def is_file_exist(self, table_name='', file_name=''):
-    if self._db_type != const.DB_TYPE['S3'] and self._db_type != const.DB_TYPE['AZUREBLOB']:
-      raise NotImplementedError('{} not implemented is_file_exist.'.format(self._db_type))
     if not table_name:
       raise ValueError('table_name is necessary')
     if not file_name:
@@ -248,11 +246,8 @@ class DBManager:
     if self._helper.is_table_exist(table_name):
       raise ValueError('table_name is exist')
     columns = list(map(self._check_columns, columns))
-    try:
-      self._helper.create_table(table_name=table_name, columns=columns)
-      return True
-    except Exception as e:
-      raise Exception(e)
+    self._helper.create_table(table_name=table_name, columns=columns)
+    return True
 
   def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
     try:
@@ -268,16 +263,20 @@ class DBManager:
         if destination.endswith('/'):
           raise ValueError('destination cannot end with "/"')
         self._helper.insert(table_name=table_name, source=source, destination=destination)
-        return True
       else:
         records = [[None if pd.isnull(value) else value for value in record] for record in records]
-        return self._helper.insert(table_name=table_name, columns=columns, records=records)
+        self._helper.insert(table_name=table_name, columns=columns, records=records)
+      return True
     except Exception as e:
       raise Exception(e)
 
-  # def delete_table(self, table_name=''):
+  def delete_table(self, table_name=''):
+    if not self._helper.is_table_exist(table_name):
+      return True
+    self.loop.run_until_complete(self._helper.delete_table(table_name))
+    return True
 
-  def delete_file(self, table_name='', file_name=''):
+  def delete_record(self, table_name='', file_name='', condition=''):
     if self._db_type != const.DB_TYPE['S3']:
       raise NotImplementedError('{} not implemented.'.format(self._db_type))
     if not table_name:

@@ -123,6 +123,8 @@ class s3Helper():
     try:
       bucket_list = [bucket['Name'] for bucket in self._connection.list_buckets()['Buckets']]
       return table_name in bucket_list
+    except TypeError as e:
+      raise Exception(e)
     except Exception as e:
       raise Exception(e.response['Error']['Message'])
 
@@ -140,25 +142,37 @@ class s3Helper():
         raise Exception(e.response['Error']['Message'])
 
   def create_table(self, table_name, columns):
-    try:
-      self._connection.create_bucket(Bucket=table_name)
-      return True
-    except Exception as e:
-      raise Exception(e.response['Error']['Message'])
+    self._connection.create_bucket(Bucket=table_name)
 
   def insert(self, table_name, source, destination):
     try:
       with open(source, 'rb') as data:
         self._connection.upload_fileobj(Fileobj=data, Bucket=table_name, Key=destination)
-      return True
-    except FileNotFoundError as e:
+    except FileNotFoundError:
       raise Exception('FileNotFound: {}'.format(source))
     except Exception as e:
       raise Exception(e.response['Error']['Message'])
 
-  def delete_file(self, table_name, file_name):
+  async def _delete_file(self, table_name, file_name):
     self._connection.delete_object(
       Bucket=table_name,
       Key=file_name
     )
-    return True
+
+  async def delete_table(self, table_name):
+    try:
+      resp = self._connection.list_objects(Bucket=table_name)
+      files = []
+      if 'Contents' in resp:
+        for obj in resp['Contents']:
+          files.append(obj['Key'])
+
+      await asyncio.gather(*[self._delete_file(table_name, file_name) for file_name in files])
+      self._connection.delete_bucket(Bucket=table_name)
+    except ClientError as e:
+      raise Exception(e.args)
+    except Exception as e:
+      raise Exception(e.response['Error']['Message'])
+
+  def is_file_exist(self, table_name, file_name):
+    raise NotImplementedError('S3 not implemented is_file_exist.')

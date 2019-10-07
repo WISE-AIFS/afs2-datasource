@@ -97,3 +97,9 @@ class PostgresHelper():
     command += ','.join(columns) + ') VALUES %s'
     execute_values(cursor, command,(records))
     self._connection.commit()
+
+  async def delete_table(self, table_name):
+    cursor = self._connection.cursor()
+    command = 'DROP TABLE IF EXISTS {table_name}'.format(table_name=table_name)
+    cursor.execute(command)
+    self._connection.commit()

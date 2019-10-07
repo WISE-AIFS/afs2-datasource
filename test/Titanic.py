@@ -18,15 +18,15 @@ import json
 import pandas as pd
 from afs2datasource import DBManager, constant
 
-with open('config/influx_internal.json') as f:
+with open('config/azureblob.json') as f:
   data = json.load(f)
   os.environ = data
 
 db = DBManager()
 db.connect()
 
-if db.get_dbtype() == constant.DB_TYPE['S3']:
-  bucket_name = 'test'
+if db.get_dbtype() == constant.DB_TYPE['S3'] or db.get_dbtype() == constant.DB_TYPE['AZUREBLOB']:
+  bucket_name = 'titanic'
   file_name = 'titanic.csv'
   if not db.is_table_exist(bucket_name):
     db.create_table(bucket_name)
@@ -35,16 +35,18 @@ else:
   df = pd.read_csv('test/titanic.csv')
   # create table
   columns = [
-    {'name': 'index', 'type': 'INTEGER'},
-    {'name': 'survived', 'type': 'FLOAT'},
-    {'name': 'age', 'type': 'FLOAT'},
-    {'name': 'embarked', 'type': 'INTEGER'},
-    {'name': 'fare', 'type': 'FLOAT'},
+    {'name': 'passenger_id', 'type': 'INTEGER'},
+    {'name': 'survived', 'type': 'INTEGER'},
     {'name': 'pclass', 'type': 'INTEGER'},
-    {'name': 'sex', 'type': 'INTEGER'},
-    {'name': 'title2', 'type': 'INTEGER'},
-    {'name': 'ticket_info', 'type': 'INTEGER'},
-    {'name': 'cabin', 'type': 'INTEGER'}
+    {'name': 'name', 'type': 'TEXT'},
+    {'name': 'sex', 'type': 'TEXT'},
+    {'name': 'age', 'type': 'INTEGER'},
+    {'name': 'sib_sp', 'type': 'INTEGER'},
+    {'name': 'parch', 'type': 'INTEGER'},
+    {'name': 'ticket', 'type': 'TEXT'},
+    {'name': 'fare', 'type': 'FLOAT'},
+    {'name': 'cabin', 'type': 'TEXT'},
+    {'name': 'embarked', 'type': 'TEXT'}
   ]
 
   table_name = ''
@@ -55,8 +57,8 @@ else:
   elif db.get_dbtype() == constant.DB_TYPE['INFLUXDB']:
     table_name = 'titanic'
 
-  # if not db.is_table_exist(table_name):  
-  db.create_table(table_name, columns)
+  if not db.is_table_exist(table_name):  
+    db.create_table(table_name, columns)
   # insert records
   db.insert(table_name, list(df.columns.values), df.values)
 

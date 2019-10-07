@@ -187,3 +187,9 @@ class APMDSHelper():
 
   def insert(self,table_name, columns, records):
     raise NotImplementedError('APMDataSource not implement.')
+
+  def delete_table(self, table_name):
+    raise NotImplementedError('APMDataSource not implement.')
+
+  def create_table(self, table_name, columns):
+    raise NotImplementedError('APMDataSource not implement.')

@@ -150,3 +150,12 @@ class azureBlobHelper():
       Key=file_name
     )
     return True
+
+  def is_file_exist(self, table_name, file_name):
+    raise NotImplementedError('S3 not implemented is_file_exist.')
+
+  async def delete_table(self, table_name):
+    try:
+      self._connection.delete_container(table_name)
+    except Exception as e:
+      raise Exception(e.error_code)

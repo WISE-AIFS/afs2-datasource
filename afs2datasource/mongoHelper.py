@@ -68,3 +68,6 @@ class MongoHelper():
   def insert(self, table_name, columns, records):
     records = list(map(lambda record: dict(zip(columns, record)), records))
     result = self._connection[self._db][table_name].insert_many(records)
+
+  async def delete_table(self, table_name):
+    self._connection[self._db][table_name].drop()

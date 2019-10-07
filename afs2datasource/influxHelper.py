@@ -58,3 +58,6 @@ class InfluxHelper():
         'measurement': table_name,
         'fields': record
       }])
+
+  async def delete_table(self, table_name):
+    self._connection.drop_measurement(table_name)
