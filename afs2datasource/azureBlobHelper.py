@@ -40,7 +40,6 @@ class azureBlobHelper():
   
   def disconnect(self):
     self._connection = None
-    return
   
   async def execute_query(self, query_list):
     query_list = self._generate_download_list(query_list)
@@ -144,18 +143,11 @@ class azureBlobHelper():
     except Exception as e:
       raise Exception(e.error_code)
 
-  def delete_file(self, table_name, file_name):
-    self._connection.delete_object(
-      Bucket=table_name,
-      Key=file_name
-    )
-    return True
-
-  def is_file_exist(self, table_name, file_name):
-    raise NotImplementedError('S3 not implemented is_file_exist.')
-
   async def delete_table(self, table_name):
     try:
       self._connection.delete_container(table_name)
     except Exception as e:
       raise Exception(e.error_code)
+  
+  def delete_record(self, table_name, file_name):
+    self._connection.delete_blob(table_name, file_name)

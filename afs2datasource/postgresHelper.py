@@ -18,6 +18,7 @@ import afs2datasource.utils as utils
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
+from functools import wraps
 
 class PostgresHelper():
   def __init__(self):
@@ -50,11 +51,22 @@ class PostgresHelper():
       raise ValueError('querySql is invalid')
     return querySql
 
+  def check_table_name(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+      table_name = kwargs.get('table_name')
+      if not table_name:
+        raise ValueError('table_name is necessary')
+      check_table_name = table_name.split('.')
+      if len(check_table_name) < 2:
+        raise ValueError('table_name is invalid. ex.{schema}.{table}')
+      return func(self, *args, **kwargs)
+    return wrapper
+
+  @check_table_name
   def is_table_exist(self, table_name):
     cursor = self._connection.cursor()
     table_name = table_name.split('.')
-    if len(table_name) < 2:
-      raise ValueError('table_name is invalid. ex.{schema}.{table}')
     schema = table_name[0]
     table = table_name[1]
     command = "select * from information_schema.tables"
@@ -64,10 +76,12 @@ class PostgresHelper():
         return True
     return False
 
+  def is_file_exist(self, table_name, file_name):
+    raise NotImplementedError('Postgres not implement.')
+
+  @check_table_name
   def create_table(self, table_name, columns):
     table_name = table_name.split('.')
-    if len(table_name) < 2:
-      raise ValueError('table_name is invalid. ex.{schema}.{table}')
     schema = table_name[0]
     table = table_name[1]
     cursor = self._connection.cursor()
@@ -87,6 +101,7 @@ class PostgresHelper():
     cursor.execute(command)
     self._connection.commit()
 
+  @check_table_name
   def insert(self, table_name, columns, records):
     cursor = self._connection.cursor()
     for record in records:
@@ -98,8 +113,16 @@ class PostgresHelper():
     execute_values(cursor, command,(records))
     self._connection.commit()
 
+  @check_table_name
   async def delete_table(self, table_name):
     cursor = self._connection.cursor()
     command = 'DROP TABLE IF EXISTS {table_name}'.format(table_name=table_name)
+    cursor.execute(command)
+    self._connection.commit()
+
+  @check_table_name
+  def delete_record(self, table_name, condition):
+    cursor = self._connection.cursor()
+    command = 'DELETE FROM {table_name} WHERE {condition}'.format(table_name=table_name, condition=condition)
     cursor.execute(command)
     self._connection.commit()

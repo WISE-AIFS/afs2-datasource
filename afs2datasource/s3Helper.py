@@ -45,7 +45,7 @@ class s3Helper():
       self._connection = connection
   
   def disconnect(self):
-    raise NotImplementedError('[S3 datasource] disconnect not implemented.')
+    self._connection = None
   
   async def execute_query(self, query_list):
     response = await asyncio.gather(*[self._generate_download_list(query) for query in query_list])
@@ -54,39 +54,6 @@ class s3Helper():
       file_list += res
     await asyncio.gather(*[self._download_file(file) for file in file_list])
     return list(set([file_obj['bucket'] for file_obj in file_list]))    
-
-  async def _generate_download_list(self, query):
-    response = []
-    bucket_name = query['bucket']
-    blob = query['blobs']
-    if 'files' in blob:
-      if not isinstance(blob['files'], (list, )):
-        if not blob['files']:
-          blob['files'] = []
-        else:
-          blob['files'] = [blob['files']]
-      response += list(map(lambda file: {'bucket': bucket_name, 'file': file}, blob['files']))
-    if 'folders' in blob:
-      if not isinstance(blob['folders'], (list, )):
-        if not blob['folders']:
-          blob['folders'] = []
-        else:
-          blob['folders'] = [blob['folders']]
-      for folder in blob['folders']:
-        try:
-          if not folder.endswith('/'):
-            folder = '{}/'.format(folder)
-          re = self._connection.list_objects(Bucket=bucket_name, Prefix=folder)
-          if 'Contents' in re:
-            for obj in re['Contents']:
-              if obj['Key'] != folder:
-                response.append({
-                  'bucket': bucket_name,
-                  'file': obj['Key']
-                })
-        except Exception as e:
-          Exception(e.response['Error']['Message'])
-    return response            
 
   async def _download_file(self, file):
     try:
@@ -153,12 +120,6 @@ class s3Helper():
     except Exception as e:
       raise Exception(e.response['Error']['Message'])
 
-  async def _delete_file(self, table_name, file_name):
-    self._connection.delete_object(
-      Bucket=table_name,
-      Key=file_name
-    )
-
   async def delete_table(self, table_name):
     try:
       resp = self._connection.list_objects(Bucket=table_name)
@@ -174,5 +135,48 @@ class s3Helper():
     except Exception as e:
       raise Exception(e.response['Error']['Message'])
 
-  def is_file_exist(self, table_name, file_name):
-    raise NotImplementedError('S3 not implemented is_file_exist.')
+  def delete_record(self, table_name, file_name):
+    self._connection.delete_object(
+      Bucket=table_name,
+      Key=file_name
+    )
+
+  async def _generate_download_list(self, query):
+    response = []
+    bucket_name = query['bucket']
+    blob = query['blobs']
+    if 'files' in blob:
+      if not isinstance(blob['files'], (list, )):
+        if not blob['files']:
+          blob['files'] = []
+        else:
+          blob['files'] = [blob['files']]
+      response += list(map(lambda file: {'bucket': bucket_name, 'file': file}, blob['files']))
+    if 'folders' in blob:
+      if not isinstance(blob['folders'], (list, )):
+        if not blob['folders']:
+          blob['folders'] = []
+        else:
+          blob['folders'] = [blob['folders']]
+      for folder in blob['folders']:
+        try:
+          if not folder.endswith('/'):
+            folder = '{}/'.format(folder)
+          re = self._connection.list_objects(Bucket=bucket_name, Prefix=folder)
+          if 'Contents' in re:
+            for obj in re['Contents']:
+              if obj['Key'] != folder:
+                response.append({
+                  'bucket': bucket_name,
+                  'file': obj['Key']
+                })
+        except Exception as e:
+          Exception(e.response['Error']['Message'])
+    return response
+
+  async def _delete_file(self, table_name, file_name):
+    self._connection.delete_object(
+      Bucket=table_name,
+      Key=file_name
+    )
+    

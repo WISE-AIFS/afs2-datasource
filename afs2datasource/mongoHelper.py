@@ -62,6 +62,9 @@ class MongoHelper():
   def is_table_exist(self, table_name):
     return table_name in self._connection[self._db].list_collection_names()
 
+  def is_file_exist(self, table_name, file_name):
+    raise NotImplementedError('Mongodb not implement.')
+
   def create_table(self, table_name, columns):
     self._connection[self._db].create_collection(table_name)
 
@@ -71,3 +74,11 @@ class MongoHelper():
 
   async def delete_table(self, table_name):
     self._connection[self._db][table_name].drop()
+
+  def delete_record(self, table_name, condition):
+    try:
+      if type(condition) is str:
+        condition = json.loads(condition)
+    except:
+      raise ValueError('querySql is invalid')
+    self._connection[self._db][table_name].delete_many(condition)

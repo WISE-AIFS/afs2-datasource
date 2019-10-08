@@ -37,7 +37,7 @@ nest_asyncio.apply()
 + <a href="#is_file_exist"><code>DBManager.<b>is_file_exist(table_name, file_name)</b></code></a>
 + <a href="#insert"><code>DBManager.<b>insert(table_name, columns, records, source, destination)</b></code></a>
 + <a href="#delete_table"><code>DBManager.<b>delete_table(table_name)</b></code></a>
-+ <a href="#delete_file"><code>DBManager.<b>delete_file(table_name, file_name)</b></code></a>
++ <a href="#delete_record"><code>DBManager.<b>delete_record(table_name, file_name, condition)</b></code></a>
 ----
 <a name="init"></a>
 #### Init DBManager
@@ -343,17 +343,37 @@ is_success = manager.delete_table(table_name=container_name)
 # Return: Boolean
 ```
 ----
-<a name="delete_file"></a>
-#### DBManager.delete_file(table_name, file_name)
-Delete file in bucket in S3 and return if the file is deleted successfully.
+<a name="delete_record"></a>
+#### DBManager.delete_record(table_name, file_name, condition)
+Delete record with `condition` in `table_name` in Postgres and MongoDB, and return if delete successfully.
 
-Note this function only support S3.
+Delete file in bucket in S3 and in container in Azure Blob,  and return if the file is deleted successfully.
+
+Note Influx not support this function.
 
 ```python
+# For Postgres
+table_name = 'titanic'
+condition = 'passenger_id = 1'
+is_success = manager.delete_record(table_name=table_name, condition=condition)
+# Return: Boolean
+
+# For Postgres
+table_name = 'titanic'
+condition = {'passanger_id': 1}
+is_success = manager.delete_record(table_name=table_name, condition=condition)
+# Return: Boolean
+
 # For S3
 bucket_name = 'bucket'
-file_name = 'test_s3.csv'
-manager.delete_file(table_name=bucket_name, file_name=file_name)
+file_name = 'data/titanic.csv'
+is_success = manager.delete_record(table_name=bucket_name, file_name=file_name)
+# Return: Boolean
+
+# For Azure Blob
+container_name = 'container'
+file_name = 'data/titanic.csv'
+is_success = manager.delete_record(table_name=container_name,file_name=file_name)
 # Return: Boolean
 ```
 ---
@@ -417,6 +437,11 @@ data = manager.execute_query()
 ...
 """
 
+# Delete Document
+condition = {'survived': 0}
+is_success = db.delete_record(table_name=table_name, condition=condition)
+# Return type: Boolean
+
 # Delete Table
 is_success = db.delete_table(table_name=table_name)
 # Return type: Boolean
@@ -471,7 +496,7 @@ is_exist = manager.is_file_exist(table_name=bucket_name, file_name=s3_file)
 # Return type: Boolean
 
 # Delete the file in Bucket and return if the file is deleted successfully
-is_success = manager.delete_file(table_name=bucket_name, file_name=s3_file)
+is_success = manager.delete_record(table_name=bucket_name, file_name=s3_file)
 # Return type: Boolean
 
 # Delete Bucket
@@ -537,6 +562,10 @@ container_names = manager.execute_query()
 # Check if file is exist in container or not
 is_exist = manager.is_file_exist(table_name=container_name, file_name=azure_file)
 # Return type: Boolean
+
+# Delete File
+is_success = manager.delete_record(table_name=container_name,
+file_file=azure_file)
 
 # Delete Container
 is_success = manager.delete_table(table_name=container_name)

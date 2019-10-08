@@ -48,6 +48,9 @@ class InfluxHelper():
   def is_table_exist(self, table_name):
     return table_name in [measure['name'] for measure in self._connection.get_list_measurements()]
 
+  def is_file_exist(self, table_name, file_name):
+    raise NotImplementedError('Influx not implement.')
+
   def create_table(self, table_name, columns):
     return
 
@@ -61,3 +64,6 @@ class InfluxHelper():
 
   async def delete_table(self, table_name):
     self._connection.drop_measurement(table_name)
+
+  def delete_record(self, table_name, condition):
+    raise NotImplementedError('Influx not implement.')

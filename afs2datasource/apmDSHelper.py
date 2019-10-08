@@ -34,9 +34,9 @@ class APMDSHelper():
       self.__login_data = {"userName": dataDir['data']['username'], "password": dataDir['data']['password']}
       self.apm_url = dataDir['data']['apmUrl']
       # self.machine_list = dataDir['data']['machineIdList']
-      self.machine_list = self.apm_config_filter(dataDir['data']['apm_config'], 'machine_id')
+      self.machine_list = self._apm_config_filter(dataDir['data']['apm_config'], 'machine_id')
       # self.parameter_list = dataDir['data']['apm_config']['parameters']
-      self.parameter_list = self.apm_config_filter(dataDir['data']['apm_config'], 'parameter')
+      self.parameter_list = self._apm_config_filter(dataDir['data']['apm_config'], 'parameter')
       self.__mongo_credentials = dataDir['data']['credential']['uri']
       if dataDir['data']['timeRange'] != []:
         self.time_range = dataDir['data']['timeRange']
@@ -50,7 +50,7 @@ class APMDSHelper():
             username=self.__login_data['userName'], password=self.__login_data['password'], apmUrl=self.apm_url, machineIdList=self.machine_list, parameterList=self.parameter_list, mongouri=self.__mongo_credentials, timeRange=self.time_range)
       )
 
-  def apm_config_filter(self, apm_config, select_type):
+  def _apm_config_filter(self, apm_config, select_type):
     if select_type is 'machine_id':
       machine_id_list = []
       for i, e in enumerate(apm_config):
@@ -91,7 +91,7 @@ class APMDSHelper():
         raise ValueError('time_last is invalid')
     return query
 
-  def get_token(self):
+  def _get_token(self):
     login_url = urljoin(self.apm_url, '/auth/login')
     accept_header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     counts = 0
@@ -107,9 +107,9 @@ class APMDSHelper():
         raise Exception('login failed. error: {}'.format(e))
     raise Exception('Try SSO Login Failed {} times.'.format(counts))
 
-  def get_machine_detail(self):
+  def _get_machine_detail(self):
     self.machine_content = []
-    apm_token = self.get_token()
+    apm_token = self._get_token()
     get_node_detail_url = urljoin(self.apm_url, '/topo/node/detail/info')
     header = {'Accept': 'application/json', 'Authorization': 'Bearer ' + apm_token['accessToken']}
     for mid in self.machine_list:
@@ -117,13 +117,13 @@ class APMDSHelper():
         machineDetail = req.get(get_node_detail_url, headers=header, params='id='+str(mid))
         if (machineDetail.status_code == 200):
           dtInstance = json.loads(machineDetail.text)['dtInstance']
-          self.reorganize_detail(dtInstance)
+          self._reorganize_detail(dtInstance)
         else:
           raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, machineDetail.status_code))
       except Exception as e:
         raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, e))
 
-  def reorganize_detail(self,dtInstance):
+  def _reorganize_detail(self,dtInstance):
     tags = []
     compact = []
     dtFeature = dtInstance['feature']['monitor']
@@ -138,7 +138,7 @@ class APMDSHelper():
       })
     self.machine_content += tags
 
-  async def generate_querySql(self):
+  async def _generate_querySql(self):
     timeSql = []
     querySql = []
     for tr in self.time_range:
@@ -149,15 +149,15 @@ class APMDSHelper():
       mc['$or'] = timeSql
       querySql.append(mc)
     self.data_container = []
-    await asyncio.wait([self.execute('scada_HistRawData', sql) for sql in querySql])
-    return self.combine_data(self.data_container)
+    await asyncio.wait([self._execute('scada_HistRawData', sql) for sql in querySql])
+    return self._combine_data(self.data_container)
     # return self.execute('scada_HistRawData', querySql)
 
   async def execute_query(self, query):
-    self.get_machine_detail()
-    return await self.generate_querySql()
+    self._get_machine_detail()
+    return await self._generate_querySql()
 
-  async def execute(self, collection, query_sql):
+  async def _execute(self, collection, query_sql):
     documents = self._connection[self._db][collection].find(query_sql, {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING)
     data = await documents.to_list(length=None)
     count_data = len(data)
@@ -166,7 +166,7 @@ class APMDSHelper():
       data.columns = ['ts', query_sql['t']]
       self.data_container.append(data)
 
-  def combine_data(self, container):
+  def _combine_data(self, container):
     if len(container) == 0:
       return pd.DataFrame()
     self.results = container[0]
@@ -192,4 +192,7 @@ class APMDSHelper():
     raise NotImplementedError('APMDataSource not implement.')
 
   def create_table(self, table_name, columns):
+    raise NotImplementedError('APMDataSource not implement.')
+
+  def delete_record(self, table_name, condition):
     raise NotImplementedError('APMDataSource not implement.')

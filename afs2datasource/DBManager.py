@@ -229,21 +229,23 @@ class DBManager:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    return self._helper.is_table_exist(table_name)
+    return self._helper.is_table_exist(table_name=table_name)
 
   def is_file_exist(self, table_name='', file_name=''):
     if not table_name:
       raise ValueError('table_name is necessary')
     if not file_name:
       raise ValueError('file_name is necessary')
-    return self._helper.is_file_exist(table_name, file_name)
+    if not self.is_connected():
+      raise RuntimeError('No connection.')
+    return self._helper.is_file_exist(table_name=table_name, file_name=file_name)
 
   def create_table(self, table_name=None, columns=[]):
     if table_name is None:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    if self._helper.is_table_exist(table_name):
+    if self._helper.is_table_exist(table_name=table_name):
       raise ValueError('table_name is exist')
     columns = list(map(self._check_columns, columns))
     self._helper.create_table(table_name=table_name, columns=columns)
@@ -255,7 +257,7 @@ class DBManager:
         raise ValueError('table_name is necessary')
       if not self.is_connected():
         raise RuntimeError('No connection.')
-      if not self._helper.is_table_exist(table_name) and self._db_type != const.DB_TYPE['INFLUXDB']:
+      if not self._helper.is_table_exist(table_name=table_name) and self._db_type != const.DB_TYPE['INFLUXDB']:
         raise ValueError('table_name is not exist')
       if self._db_type == const.DB_TYPE['S3'] or self._db_type == const.DB_TYPE['AZUREBLOB']:
         if not source or not destination:
@@ -271,21 +273,30 @@ class DBManager:
       raise Exception(e)
 
   def delete_table(self, table_name=''):
-    if not self._helper.is_table_exist(table_name):
+    if not table_name:
+      raise ValueError('table_name is necessary')
+    if not self.is_connected():
+      raise RuntimeError('No connection.')
+    if not self._helper.is_table_exist(table_name=table_name):
       return True
-    self.loop.run_until_complete(self._helper.delete_table(table_name))
+    self.loop.run_until_complete(self._helper.delete_table(table_name=table_name))
     return True
 
   def delete_record(self, table_name='', file_name='', condition=''):
-    if self._db_type != const.DB_TYPE['S3']:
-      raise NotImplementedError('{} not implemented.'.format(self._db_type))
     if not table_name:
       raise ValueError('table_name is necessary')
-    if not file_name:
-      raise ValueError('file_name is necessary')
-    if not self.is_file_exist(table_name, file_name):
-      raise FileNotFoundError('{} file is not found'.format(file_name))
-    return self._helper.delete_file(table_name, file_name)
+    if not self.is_connected():
+      raise RuntimeError('No connection.')
+    if self.get_dbtype() == const.DB_TYPE['S3'] or self.get_dbtype() == const.DB_TYPE['AZUREBLOB']:
+      if not file_name:
+        raise ValueError('file_name is necessary')
+      if self._helper.is_file_exist(table_name=table_name, file_name=file_name):
+        self._helper.delete_record(table_name=table_name, file_name=file_name)
+    else:
+      if not condition:
+        raise ValueError('condition is necessary')
+      self._helper.delete_record(table_name=table_name, condition=condition)
+    return True
 
   def _check_columns(self, col):
     if 'name' not in col:
