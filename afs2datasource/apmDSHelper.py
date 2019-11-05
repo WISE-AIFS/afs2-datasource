@@ -38,20 +38,6 @@ class APMDSHelper():
     else:
       self._db_type = const.DB_TYPE['MONGODB']
 
-  def _apm_config_filter(self, apm_config, select_type):
-    if select_type is 'machine_id':
-      machine_id_list = []
-      for i, e in enumerate(apm_config):
-        for m_i, m_e in enumerate(e['machines']):
-          machine_id_list.append(m_e['id'])
-      return machine_id_list
-    elif select_type is 'parameter':
-      parameter_list = []
-      for i, e in enumerate(apm_config):
-        for p_i, p_e in enumerate(e['parameters']):
-          parameter_list.append(p_e)
-      return parameter_list
-
   async def connect(self):
     if self._connection is None:
       self._connection = motor.motor_asyncio.AsyncIOMotorClient(self._mongo_url)
@@ -92,7 +78,7 @@ class APMDSHelper():
     # check apm config
     # check machines
     apm_configs = query.get('apm_config', [])
-    for apm_config in apm_config:
+    for apm_config in apm_configs:
       name = apm_config.get('name', None)
       if not name:
         raise ValueError('name in apm_config is empty')
@@ -207,15 +193,11 @@ class APMDSHelper():
     # according to db type
     if self._db_type == const.DB_TYPE['MONGODB']:
       # generate sql
-      ts = {}
-      if len(time_range) > 1:
-          ts = {'$or': list(map(lambda ts: {'$gte': ts['start'], '$lte': ts['end']}, time_range))}
-      else:
-          ts = {'$gte': time_range[0]['start'], '$lte': time_range[0]['end']}
+      ts = list(map(lambda ts: {'ts': {'$gte': ts['start'], '$lte': ts['end']}}, time_range))
       sql = {
         's': query['scada_id'],
         't': '{device_id}\\{tag_name}'.format(device_id=query['device_id'], tag_name=query['tag_name']),
-        'ts': ts
+        '$or': ts
       }
       # query data
       collection = 'scada_HistRawData'
