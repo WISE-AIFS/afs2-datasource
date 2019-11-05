@@ -89,3 +89,22 @@ def get_azure_blob_credential(data):
   if not account_key:
     raise AttributeError('No accountKey in credential')
   return account_name, account_key
+
+def get_apm_credential_from_dataDir(data):
+  username = data.get('username', None)
+  password = data.get('password', None)
+  apm_url = data.get('apmUrl', None)
+  credential = data.get('credential', {})
+  mongo_url = credential.get('uri', None)
+  influx_url = credential.get('influx_uri', None)
+
+  if not username:
+    raise AttributeError('No username in data')
+  if not password:
+    raise AttributeError('No password in data')
+  if not apm_url:
+    raise AttributeError('No apm_url in data')
+  if not mongo_url and not influx_url:
+    raise AttributeError('No mongo_credential in credential')
+
+  return username, password, apm_url, mongo_url, influx_url

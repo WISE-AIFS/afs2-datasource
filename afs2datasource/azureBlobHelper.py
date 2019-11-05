@@ -30,7 +30,7 @@ class azureBlobHelper():
   def __init__(self):
     self._connection = None
 
-  def connect(self):
+  async def connect(self):
     data = utils.get_data_from_dataDir()
     account_name, account_key = utils.get_azure_blob_credential(data)
     if self._connection is None:

@@ -26,7 +26,7 @@ class MongoHelper():
     self._collection = ''
     self._connection = None
 
-  def connect(self):
+  async def connect(self):
     if self._connection is None:
       data = utils.get_data_from_dataDir()
       username, password, host, port, database = utils.get_credential_from_dataDir(data)

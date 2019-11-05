@@ -20,14 +20,14 @@ import logging
 import afs2datasource.utils as utils
 from botocore.utils import is_valid_endpoint_url
 from botocore.client import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError
 
 class s3Helper():
   def __init__(self):
     self._connection = None
     self._bucket = ''
 
-  def connect(self):
+  async def connect(self):
     data = utils.get_data_from_dataDir()
     endpoint, access_key, secret_key, is_verify = utils.get_s3_credential(data)
     if self._connection is None:
@@ -42,6 +42,7 @@ class s3Helper():
         config=config,
         verify=is_verify
       )
+      connection.list_buckets()['Buckets']
       self._connection = connection
   
   def disconnect(self):
@@ -64,10 +65,11 @@ class s3Helper():
         folder, _ = os.path.split('{}'.format(file_path))
         if not os.path.exists(folder) or (os.path.exists(folder) and not os.path.isdir(folder)):
           os.makedirs(folder)
-      obj = self._connection.get_object(Bucket=file['bucket'], Key=file['file'])
-      with open(file_path, 'wb') as f:
-        while f.write(obj['Body'].read()):
-          pass
+      self._connection.download_file(file['bucket'], file['file'], file_path)
+      # obj = self._connection.get_object(Bucket=file['bucket'], Key=file['file'])
+      # with open(file_path, 'wb') as f:
+      #   while f.write(obj['Body'].read()):
+      #     pass
     except ClientError as e:
       raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
     except Exception as e:
@@ -151,6 +153,7 @@ class s3Helper():
           blob['files'] = []
         else:
           blob['files'] = [blob['files']]
+      blob['files'] = list(filter(None, blob['files']))
       response += list(map(lambda file: {'bucket': bucket_name, 'file': file}, blob['files']))
     if 'folders' in blob:
       if not isinstance(blob['folders'], (list, )):
@@ -158,18 +161,24 @@ class s3Helper():
           blob['folders'] = []
         else:
           blob['folders'] = [blob['folders']]
+      blob['folders'] = list(filter(None, blob['folders']))
       for folder in blob['folders']:
         try:
           if not folder.endswith('/'):
             folder = '{}/'.format(folder)
-          re = self._connection.list_objects(Bucket=bucket_name, Prefix=folder)
-          if 'Contents' in re:
-            for obj in re['Contents']:
-              if obj['Key'] != folder:
-                response.append({
-                  'bucket': bucket_name,
-                  'file': obj['Key']
-                })
+          start = folder
+          IsTruncated = True
+          while IsTruncated:
+            re = self._connection.list_objects_v2(Bucket=bucket_name, Prefix=folder, StartAfter=start)
+            if 'Contents' in re:
+              for obj in re['Contents']:
+                if obj['Key'] != folder:
+                  response.append({
+                    'bucket': bucket_name,
+                    'file': obj['Key']
+                  })
+            IsTruncated = re['IsTruncated']
+            start = re['Contents'][-1]['Key'] if IsTruncated else None
         except Exception as e:
           Exception(e.response['Error']['Message'])
     return response

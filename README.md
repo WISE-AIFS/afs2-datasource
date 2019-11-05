@@ -107,8 +107,16 @@ manager = DBManager(db_type=constant.DB_TYPE['APM'],
   username=username,  # sso username
   password=password,  # sso password
   apmUrl=apmUrl,
-  machineIdList=[machineId],  # APM Machine Id
-  parameterList=[parameter],  # APM Parameter
+  apm_config=[{
+    'name': name  # dataset name
+    'machines': [{
+      'id': machine_id  # node_id in APM
+    }],
+    'parameters': [
+      parameter1,      # parameter in APM
+      parameter2
+    ]
+  }],
   mongouri=mongouri,
   # timeRange or timeLast
   timeRange=[{'start': start_ts, 'end': end_ts}],
@@ -171,7 +179,7 @@ Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `queryS
 
 Download files which is specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of array.
 
-Return data of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
+Return dataframe of list which  of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
 ```python
 # For Postgres, MongoDB, InfluxDB and APM
@@ -308,14 +316,22 @@ manager.insert(table_name=container_name, source=source, destination=destination
 * Required
   - username: APM SSO username
   - password: APM SSO password
-  - uri: mongo data base uri
+  - mongouri: mongo data base uri
   - apmurl: APM api url
-  - machineIdList: APM machine Id list (**type:Array**)
-  - parameterList: APM parameter name list (**type:Array**)
+  - apm_config: APM config (**type:Array**)
+    - name: dataset name
+    - machines: APM machine list (**type:Array**)
+      - id: APM machine Id
+    - parameters: APM parameter name list (**type:Array**)
   - time range: Training date range
     * example:
     ```json
     [{'start':'2019-05-01', 'end':'2019-05-31'}]
+    ```
+  - time last: Training date range
+    * example:
+    ```json
+    {'lastDays:' 1, 'lastHours': 2, 'lastMins': 3}
     ```
 ----
 <a name="delete_table"></a>

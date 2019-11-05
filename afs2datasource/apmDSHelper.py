@@ -14,41 +14,29 @@
 #    under the License.
 
 import json
-import os
-import requests as req
-from urllib.parse import urljoin
-import motor.motor_asyncio
 import asyncio
-from pymongo import ASCENDING
+import requests
 import pandas as pd
-import datetime
+import motor.motor_asyncio
+from pymongo import ASCENDING
+from urllib.parse import urljoin
+from dateutil.parser import parse
+import afs2datasource.utils as utils
+import afs2datasource.constant as const
+from datetime import datetime, timedelta
+
+RETRY = 5
 
 class APMDSHelper():
   def __init__(self):
     self._connection = None
+    data = utils.get_data_from_dataDir()
+    self._username, self._password, self._apm_url, self._mongo_url, self._influx_url = utils.get_apm_credential_from_dataDir(data)
     self._db = ''
-    dataDir = os.getenv('PAI_DATA_DIR', None)
-    if dataDir is not None:
-      if type(dataDir) is str:
-        dataDir = json.loads(dataDir)
-      self.__login_data = {"userName": dataDir['data']['username'], "password": dataDir['data']['password']}
-      self.apm_url = dataDir['data']['apmUrl']
-      # self.machine_list = dataDir['data']['machineIdList']
-      self.machine_list = self._apm_config_filter(dataDir['data']['apm_config'], 'machine_id')
-      # self.parameter_list = dataDir['data']['apm_config']['parameters']
-      self.parameter_list = self._apm_config_filter(dataDir['data']['apm_config'], 'parameter')
-      self.__mongo_credentials = dataDir['data']['credential']['uri']
-      if dataDir['data']['timeRange'] != []:
-        self.time_range = dataDir['data']['timeRange']
-      elif dataDir['data']['timeLast'] != []:
-        new_start_time = (datetime.datetime.now(
-        ) - datetime.timedelta(days=int(dataDir['data']['timeLast']['lastDays']), hours=int(dataDir['data']['timeLast']['lastHours']), minutes=int(dataDir['data']['timeLast']['lastMins']))).strftime('%Y-%m-%d')
-        self.time_range = [{'start': new_start_time,'end': datetime.datetime.now().strftime('%Y-%m-%d')}]
+    if self._influx_url:
+      self._db_type = const.DB_TYPE['INFLUXDB']
     else:
-      raise AssertionError(
-        "Environment parameters need apm_username={username}, apm_password={password}, apm_url={apmUrl}, machine_id_list={machineIdList}, parameter_list={parameterList}, mongo_uri={mongouri} and time_range={timeRange}".format(
-            username=self.__login_data['userName'], password=self.__login_data['password'], apmUrl=self.apm_url, machineIdList=self.machine_list, parameterList=self.parameter_list, mongouri=self.__mongo_credentials, timeRange=self.time_range)
-      )
+      self._db_type = const.DB_TYPE['MONGODB']
 
   def _apm_config_filter(self, apm_config, select_type):
     if select_type is 'machine_id':
@@ -64,10 +52,12 @@ class APMDSHelper():
           parameter_list.append(p_e)
       return parameter_list
 
-  def connect(self):
+  async def connect(self):
     if self._connection is None:
-      self._connection = motor.motor_asyncio.AsyncIOMotorClient(self.__mongo_credentials)
-      self._db = self.__mongo_credentials.split('/')[-1]
+      self._connection = motor.motor_asyncio.AsyncIOMotorClient(self._mongo_url)
+      data = await self._connection.server_info()
+      self._db = self._mongo_url.split('/')[-1]
+      self._token = self._get_token()
 
   def disconnect(self):
     if self._connection:
@@ -76,105 +66,173 @@ class APMDSHelper():
       self._db = ''
 
   def check_query(self, query):
-    if not query['machine_list']:
-      raise ValueError('machine_list is invalid')
-    if not query['parameter_list']:
-      raise ValueError('parameter_list is invalid')
+    # check time
     if not query['time_range'] and not query['time_last']:
-      raise ValueError('time_range is invalid')
+      raise ValueError('time_range and time_list is empty')
+
     if query['time_range']:
       for time in query['time_range']:
         if time.get('start') is None or time.get('end') is None:
           raise ValueError('time_range is invalid')
+        time['start'] = parse(time.get('start'))
+        time['end'] = parse(time.get('end')) + timedelta(days=1)
     elif query['time_last']:
-      if query['time_last'].get('lastDays') is None or query['time_last'].get('lastHours') is None or query['time_last'].get('lastMins') is None:
+      days = query['time_last'].get('lastDays', 0)
+      hours = query['time_last'].get('lastHours', 0)
+      mins = query['time_last'].get('lastMins', 0)
+      if days + hours + mins == 0:
         raise ValueError('time_last is invalid')
+      now = datetime.now()
+      query['time_range'] = {
+        'start': now - datetime.timedelta(days=days, hours=hours, minutes=mins),
+        'end': now
+      }
+      del query['time_last']
+    
+    # check apm config
+    # check machines
+    apm_configs = query.get('apm_config', [])
+    for apm_config in apm_config:
+      name = apm_config.get('name', None)
+      if not name:
+        raise ValueError('name in apm_config is empty')
+      machines = apm_config.get('machines', [])
+      for machine in machines:
+        if not 'id' in machine:
+          raise ValueError('machine id is empty')
     return query
 
   def _get_token(self):
-    login_url = urljoin(self.apm_url, '/auth/login')
-    accept_header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-    counts = 0
-    while counts < 5:
+    url = urljoin(self._apm_url, '/auth/login')
+    body = {
+      'userName': self._username,
+      'password': self._password
+    }
+    retry = 0
+    while retry < RETRY:
       try:
-        login_information = req.post(login_url, data=json.dumps(self.__login_data), headers=accept_header, timeout=3)
-        if login_information.status_code is 200:
-          return json.loads(login_information.content.decode('UTF-8'))
+        resp = requests.post(
+          url,
+          json=body,
+          timeout=3
+        )
+        if resp.status_code == 200:
+          resp = resp.json()
+          return resp['accessToken']
         else:
-          message = json.loads(login_information.content.decode('UTF-8'))
+          message = json.loads(resp.content.decode('UTF-8'))
           raise Exception('Try SSO Login Failed {}.'.format(message['message']))
-      except Exception as e:
-        raise Exception('login failed. error: {}'.format(e))
-    raise Exception('Try SSO Login Failed {} times.'.format(counts))
-
-  def _get_machine_detail(self):
-    self.machine_content = []
-    apm_token = self._get_token()
-    get_node_detail_url = urljoin(self.apm_url, '/topo/node/detail/info')
-    header = {'Accept': 'application/json', 'Authorization': 'Bearer ' + apm_token['accessToken']}
-    for mid in self.machine_list:
-      try:
-        machineDetail = req.get(get_node_detail_url, headers=header, params='id='+str(mid))
-        if (machineDetail.status_code == 200):
-          dtInstance = json.loads(machineDetail.text)['dtInstance']
-          self._reorganize_detail(dtInstance)
-        else:
-          raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, machineDetail.status_code))
-      except Exception as e:
-        raise RuntimeError('Get Machine {0} detail failed: {1}'.format(min, e))
-
-  def _reorganize_detail(self,dtInstance):
-    tags = []
-    compact = []
-    dtFeature = dtInstance['feature']['monitor']
-    dtProperty = dtInstance['property']['iotSense']
-    device = dtProperty['deviceId'].split('@')[-1]
-    dtFeature = list(filter(lambda f: f['name'] in self.parameter_list, dtFeature))
-    tags = []
-    for t in dtFeature:
-      tags.append({
-        's': dtProperty['groupId'],
-        't': device + '\\' + t['tag'].split('@')[-1],
-      })
-    self.machine_content += tags
-
-  async def _generate_querySql(self):
-    timeSql = []
-    querySql = []
-    for tr in self.time_range:
-      startTS = datetime.datetime.strptime(tr['start'], '%Y-%m-%d')
-      endTS = datetime.datetime.strptime(tr['end'], '%Y-%m-%d') + datetime.timedelta(days=1)
-      timeSql.append({'ts': {'$gte': startTS, '$lte': endTS}})
-    for mc in self.machine_content:
-      mc['$or'] = timeSql
-      querySql.append(mc)
-    self.data_container = []
-    await asyncio.wait([self._execute('scada_HistRawData', sql) for sql in querySql])
-    return self._combine_data(self.data_container)
-    # return self.execute('scada_HistRawData', querySql)
+      except requests.exceptions.Timeout:
+        retry = retry + 1
+    raise Exception('Try SSO Login Failed.')
 
   async def execute_query(self, query):
-    self._get_machine_detail()
-    return await self._generate_querySql()
+    # execute query by each apm config
+    resp = await asyncio.gather(*[self._execute_query_by_config(query['time_range'], q) for q in query['apm_config']]) 
+    resp_dict = {}
+    for idx, value in enumerate(resp):
+      resp_dict[query['apm_config'][idx]['name']] = value
+    return resp_dict
 
-  async def _execute(self, collection, query_sql):
-    documents = self._connection[self._db][collection].find(query_sql, {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING)
-    data = await documents.to_list(length=None)
-    count_data = len(data)
-    data = pd.DataFrame(data=data)
-    if count_data is not 0:
-      data.columns = ['ts', query_sql['t']]
-      self.data_container.append(data)
+  async def _execute_query_by_config(self, time_range, query):
+    # format the apm config
+    machine_list = query.get('machines', [])
+    query_list = []
+    for machine in machine_list:
+      query_list.append({
+        'id': machine['id'],
+        'name': machine['name'],
+        'parameters': query.get('parameters', [])
+      })
+    # execute query by each machine in apm config
+    df_list = await asyncio.gather(*[self._execute_query_by_machine(time_range, query) for query in query_list])
+    df_list = [inner for outer in df_list for inner in outer]
+    # join dataframe
+    result = self._combine_data(df_list)
+    return result
 
-  def _combine_data(self, container):
-    if len(container) == 0:
-      return pd.DataFrame()
-    self.results = container[0]
-    for contain in range(len(container)):
-      if contain == 0:
-        continue
-      self.results = pd.merge(self.results, container[contain], how='outer', on='ts').sort_values(by=['ts'])
-    return self.results
+  async def _execute_query_by_machine(self, time_range, query):
+    # query scada config
+    query_list = self._get_machine_info(query)
+    # execute query by each scada config, and return dataframe
+    df_list = await asyncio.gather(*[self._execute_query(time_range, query) for query in query_list]) 
+    return df_list
+
+  def _get_machine_info(self, query):
+    # get apm node info by node id
+    url = urljoin(self._apm_url, '/topo/node/detail/info')
+    header = {'Authorization': 'Bearer ' + self._token}
+    params = {'id': query['id']}
+    query_list = []
+
+    # no tag_name is query
+    if len(query['parameters']) == 0:
+      return query_list
+
+    retry = 0
+    while retry < RETRY:
+      resp = requests.get(
+        url,
+        headers=header,
+        params=params
+      )
+      if resp.status_code == 200:
+        resp = resp.json()
+        dtInstance = resp.get('dtInstance', {})
+        property = dtInstance.get('property', {})
+        iotSense = property.get('iotSense', {})
+        if not ('deviceId' in iotSense and 'groupId' in iotSense):
+          raise ValueError('APM response format error')
+        scada_id = iotSense['groupId']
+        device_id = iotSense['deviceId'].split('@')[-1]
+        feature = dtInstance.get('feature', {})
+        monitor = feature.get('monitor', [])
+        for parameter in query['parameters']:
+          tag = next((t for t in monitor if t['name'] == parameter), {})
+          if tag:
+            query_list.append({
+              'scada_id': scada_id,
+              'device_id': device_id,
+              'tag_name': tag['tag'].split('@')[-1],
+              'parameter': parameter
+            })
+          else:
+            raise ValueError('Machine {0} do not have {1} parameter.'.format(query['name'], parameters))
+        return query_list
+      else:
+        retry = retry + 1
+    raise RuntimeError('Get Machine {0} detail failed: {1}'.format(query['name'], resp))
+
+  async def _execute_query(self, time_range, query):
+    # according to db type
+    if self._db_type == const.DB_TYPE['MONGODB']:
+      # generate sql
+      ts = {}
+      if len(time_range) > 1:
+          ts = {'$or': list(map(lambda ts: {'$gte': ts['start'], '$lte': ts['end']}, time_range))}
+      else:
+          ts = {'$gte': time_range[0]['start'], '$lte': time_range[0]['end']}
+      sql = {
+        's': query['scada_id'],
+        't': '{device_id}\\{tag_name}'.format(device_id=query['device_id'], tag_name=query['tag_name']),
+        'ts': ts
+      }
+      # query data
+      collection = 'scada_HistRawData'
+      docs = self._connection[self._db][collection].find(sql, {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING)
+      data = await docs.to_list(length=None)
+      data = pd.DataFrame(data, columns=['ts', 'v']).rename(columns={'v': query['parameter']})
+    else: # influx db
+      data = pd.DataFrame(columns=['ts', 'v']).rename(columns={'v': query['parameter']})
+    return data
+  
+  def _combine_data(self, df_list):
+    for idx, df in enumerate(df_list):
+      if idx == 0:
+        result = df
+      else:
+        result = pd.merge(result, df, how='outer', on='ts').sort_values(by=['ts'])
+    return result
 
   def is_table_exist(self, table_name):
     raise NotImplementedError('APMDataSource not implement.')

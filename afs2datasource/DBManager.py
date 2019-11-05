@@ -17,9 +17,12 @@ import os
 import json
 import base64
 import asyncio
+import urllib3
 import pandas as pd
 import afs2datasource.constant as const
 import afs2datasource.utils as utils
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class DBManager:
   def __init__(self, **config):
@@ -60,27 +63,19 @@ class DBManager:
       password = config.get('password', None)
       password = base64.b64encode(password.encode('UTF-8')).decode('UTF-8')
       apmUrl = config.get('apmUrl', None)
-      # machineIdList = config.get('machineIdList', None)
-      machineIdList = self._apm_ds_filter(config.get('apm_config'), 'machine_id')
-      # parameterList = config.get('parameterList', None)
-      parameterList = self._apm_ds_filter(config.get('apm_config'), 'parameters')
+      apm_config = config.get('apm_config', None)
       mongouri = config.get('mongouri', None)
       timeRange = config.get('timeRange', None)
       timeLast = config.get('timeLast',None)
-      if len(machineIdList) is 0:
-        machineIdList = None
-      if len(parameterList) is 0:
-        parameterList = None
       dataDir = {
         'type': db_type,
         'data': {
           'username': username,
           'password': password,
           'apmUrl': apmUrl,
-          'machineIdList': machineIdList,
-          'parameterList': parameterList,
           'timeRange': timeRange,
           'timeLast': timeLast,
+          'apm_config': apm_config,
           'credential': {
             'uri': mongouri
           }
@@ -165,7 +160,7 @@ class DBManager:
       if self.is_connected() or self.is_connecting():
         return
       self._status = const.DB_STATUS['CONNECTING']
-      self._helper.connect()
+      self.loop.run_until_complete(self._helper.connect())
       self._status = const.DB_STATUS['CONNECTED']
       return True
     except Exception as ex:
@@ -196,10 +191,7 @@ class DBManager:
       query = data.get('containers', [])
     elif self._db_type == const.DB_TYPE['APM']:
       query = {
-        # 'machine_list': data.get('machineIdList', []),
-        'machine_list': self._apm_ds_filter(data.get('apm_config'), 'machine_id'),
-        # 'parameter_list': data.get('parameterList', []),
-        'parameter_list': self._apm_ds_filter(data.get('apm_config'), 'parameters'),
+        'apm_config': data.get('apm_config', []),
         'time_range': data.get('timeRange', []),
         'time_last': data.get('timeLast', [])
       }
