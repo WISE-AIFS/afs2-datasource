@@ -177,7 +177,7 @@ manager.get_dbtype()
 #### DBManager.execute_query()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
 
-Download files which is specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of array.
+Download files which are specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of the array.
 
 Return dataframe of list which  of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
@@ -241,11 +241,11 @@ manager.create_table(table_name=container_name)
 ----
 <a name="is_table_exist"></a>
 #### DBManager.is_table_exist(table_name)
-Return if the table is exist in Postgres, MongoDB or Influxdb.
+Return if the table exists in Postgres, MongoDB or Influxdb.
 
-Return if the bucket is exist in S3.
+Return if the bucket exists in S3.
 
-Return if the container is exist in Azure Blob.
+Return if the container exists in Azure Blob.
 
 ```python
 # For Postgres, MongoDB and InfluxDB
@@ -263,8 +263,8 @@ manager.is_table_exist(table_name=container_name)
 ----
 <a name="is_file_exist"></a>
 #### DBManager.is_file_exist(table_name, file_name)
-Return if the file is exist in bucket in S3.
-Return if the file is exist in container in Azure Blob.
+Return if the file exists in the bucket in S3.
+Return if the file exists in the container in Azure Blob.
 
 Note this function only support S3 and Azure Blob.
 ```python
