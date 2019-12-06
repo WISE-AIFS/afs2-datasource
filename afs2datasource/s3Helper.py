@@ -66,10 +66,6 @@ class s3Helper():
         if not os.path.exists(folder) or (os.path.exists(folder) and not os.path.isdir(folder)):
           os.makedirs(folder)
       self._connection.download_file(file['bucket'], file['file'], file_path)
-      # obj = self._connection.get_object(Bucket=file['bucket'], Key=file['file'])
-      # with open(file_path, 'wb') as f:
-      #   while f.write(obj['Body'].read()):
-      #     pass
     except ClientError as e:
       raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
     except Exception as e:
@@ -161,24 +157,19 @@ class s3Helper():
           blob['folders'] = []
         else:
           blob['folders'] = [blob['folders']]
+      paginator  = self._connection.get_paginator('list_objects')
       blob['folders'] = list(filter(None, blob['folders']))
       for folder in blob['folders']:
         try:
           if not folder.endswith('/'):
             folder = '{}/'.format(folder)
-          start = folder
-          IsTruncated = True
-          while IsTruncated:
-            re = self._connection.list_objects_v2(Bucket=bucket_name, Prefix=folder, StartAfter=start)
-            if 'Contents' in re:
-              for obj in re['Contents']:
-                if obj['Key'] != folder:
-                  response.append({
-                    'bucket': bucket_name,
-                    'file': obj['Key']
-                  })
-            IsTruncated = re['IsTruncated']
-            start = re['Contents'][-1]['Key'] if IsTruncated else None
+          operation_parameters = {
+            'Bucket': bucket_name,
+            'Prefix': folder
+          }
+          page_iterator = paginator.paginate(**operation_parameters)
+          for page in page_iterator:
+            response += list(map(lambda obj: {'bucket': bucket_name, 'file': obj['Key']}, page['Contents']))
         except Exception as e:
           Exception(e.response['Error']['Message'])
     return response
