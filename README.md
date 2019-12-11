@@ -136,6 +136,8 @@ manager = DBManager(db_type=constant.DB_TYPE['AZUREBLOB'],
   }]
 )
 ```
+##### How to get APM machine id and parameters
+![Alt text](apm_document.jpg)
 ----
 <a name="connect"></a>
 #### DBManager.connect()
