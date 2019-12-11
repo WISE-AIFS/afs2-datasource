@@ -22,6 +22,9 @@ from botocore.utils import is_valid_endpoint_url
 from botocore.client import Config
 from botocore.exceptions import ClientError, EndpointConnectionError
 
+TOTAL_FILES_COUNT = 0
+TOTAL_DOWNLOAD_FILES = 0
+
 class s3Helper():
   def __init__(self):
     self._connection = None
@@ -49,14 +52,19 @@ class s3Helper():
     self._connection = None
   
   async def execute_query(self, query_list):
+    global TOTAL_FILE_COUNT, TOTAL_DOWNLOAD_FILES
+    TOTAL_FILE_COUNT = 0
     response = await asyncio.gather(*[self._generate_download_list(query) for query in query_list])
     file_list = []
     for res in response:
       file_list += res
+    TOTAL_DOWNLOAD_FILES = 0
+    print("\n-------START DOWNLOAD FILES-------")
     await asyncio.gather(*[self._download_file(file) for file in file_list])
     return list(set([file_obj['bucket'] for file_obj in file_list]))    
 
   async def _download_file(self, file):
+    global TOTAL_FILES_COUNT, TOTAL_DOWNLOAD_FILES
     try:
       file_path = os.path.join(file['bucket'], file['file'])
       if not os.path.exists(file['bucket']):
@@ -66,10 +74,12 @@ class s3Helper():
         if not os.path.exists(folder) or (os.path.exists(folder) and not os.path.isdir(folder)):
           os.makedirs(folder)
       self._connection.download_file(file['bucket'], file['file'], file_path)
-    except ClientError as e:
-      raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
+      TOTAL_DOWNLOAD_FILES += 1
+      print("Already download files: {0}/{1}".format(TOTAL_DOWNLOAD_FILES, TOTAL_FILE_COUNT), end='\r')
+    # except ClientError as e:
+    #   raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
     except Exception as e:
-      raise e
+      print("\nDownload file {0} fail: {1}".format(file['file'], e))
 
   def check_query(self, query_list):
     if not isinstance(query_list, (list, )):
@@ -140,6 +150,7 @@ class s3Helper():
     )
 
   async def _generate_download_list(self, query):
+    global TOTAL_FILE_COUNT
     response = []
     bucket_name = query['bucket']
     blob = query['blobs']
@@ -150,6 +161,8 @@ class s3Helper():
         else:
           blob['files'] = [blob['files']]
       blob['files'] = list(filter(None, blob['files']))
+      TOTAL_FILE_COUNT += len(blob['files'])
+      print("Counting the download files: {}".format(TOTAL_FILE_COUNT), end='\r')
       response += list(map(lambda file: {'bucket': bucket_name, 'file': file}, blob['files']))
     if 'folders' in blob:
       if not isinstance(blob['folders'], (list, )):
@@ -157,8 +170,8 @@ class s3Helper():
           blob['folders'] = []
         else:
           blob['folders'] = [blob['folders']]
-      paginator  = self._connection.get_paginator('list_objects')
       blob['folders'] = list(filter(None, blob['folders']))
+      paginator  = self._connection.get_paginator('list_objects')
       for folder in blob['folders']:
         try:
           if not folder.endswith('/'):
@@ -169,7 +182,11 @@ class s3Helper():
           }
           page_iterator = paginator.paginate(**operation_parameters)
           for page in page_iterator:
-            response += list(map(lambda obj: {'bucket': bucket_name, 'file': obj['Key']}, page['Contents']))
+            if 'Contents' in page:
+              files = list(filter(lambda obj: not obj['Key'].endswith('/'), page['Contents']))
+              TOTAL_FILE_COUNT += len(files)            
+              print("Counting the download files: {}".format(TOTAL_FILE_COUNT), end='\r')
+              response += list(map(lambda obj: {'bucket': bucket_name, 'file': obj['Key']}, files))
         except Exception as e:
           Exception(e.response['Error']['Message'])
     return response
