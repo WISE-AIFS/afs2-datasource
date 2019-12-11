@@ -11,4 +11,5 @@ main.py
 test.py
 */__pycache__
 afs2_datasource.egg-info/
-s3.py
+s3.py 
+aoi-training/
