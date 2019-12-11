@@ -127,7 +127,6 @@ class APMDSHelper():
     for machine in machine_list:
       query_list.append({
         'id': machine['id'],
-        'name': machine['name'],
         'parameters': query.get('parameters', [])
       })
     # execute query by each machine in apm config
@@ -164,6 +163,7 @@ class APMDSHelper():
       )
       if resp.status_code == 200:
         resp = resp.json()
+        name = resp.get('name', '')
         dtInstance = resp.get('dtInstance', {})
         property = dtInstance.get('property', {})
         iotSense = property.get('iotSense', {})
@@ -183,11 +183,11 @@ class APMDSHelper():
               'parameter': parameter
             })
           else:
-            raise ValueError('Machine {0} do not have {1} parameter.'.format(query['name'], parameters))
+            raise ValueError('Machine {0} do not have {1} parameter.'.format(name, parameters))
         return query_list
       else:
         retry = retry + 1
-    raise RuntimeError('Get Machine {0} detail failed: {1}'.format(query['name'], resp))
+    raise RuntimeError('Get Machine Id {0} detail failed: {1}'.format(query['id'], resp))
 
   async def _execute_query(self, time_range, query):
     # according to db type
