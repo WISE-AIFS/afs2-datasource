@@ -501,7 +501,7 @@ manager.create_table(table_name=bucket_name)
 
 # Upload File to S3
 local_file = '../test.csv'
-s3_file = 'dataset/test.csv'
+s3_file = 'dataset/train.csv'
 manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 
 # Download files in blob_list
@@ -569,7 +569,7 @@ manager.create_table(table_name=container_name)
 
 # Upload File to Azure Blob
 local_file = '../test.csv'
-azure_file = 'dataset/test.csv'
+azure_file = 'models/train.csv'
 manager.insert(table_name=container_name, source=local_file, destination=azure_file)
 
 # Download files in `containers`
