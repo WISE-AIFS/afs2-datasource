@@ -25,6 +25,7 @@ from azure.common import AzureHttpError
 logging.getLogger('azure.storage').setLevel(logging.CRITICAL)
 
 BLOBNOTFOUND = 'BlobNotFound'
+TOTAL_FILES_COUNT = 0
 
 class azureBlobHelper():
   def __init__(self):
@@ -42,11 +43,14 @@ class azureBlobHelper():
     self._connection = None
   
   async def execute_query(self, query_list):
+    global TOTAL_FILE_COUNT
+    TOTAL_FILE_COUNT = 0
     query_list = self._generate_download_list(query_list)
     await asyncio.gather(*[self._download_file(query) for query in query_list])
     return list(set([query['container'] for query in query_list]))
 
   def _generate_download_list(self, query_list):
+    global TOTAL_FILE_COUNT
     response = []
     for query in query_list:
       blob = query['blobs']
@@ -70,6 +74,7 @@ class azureBlobHelper():
           except Exception as e:
             raise Exception(e.error_code)
           response += list(map(lambda file: {'container': container_name, 'file': file.name}, blobs))
+    print("Counting the download files: {}".format(TOTAL_FILE_COUNT), end='\r')
     return response
 
   async def _download_file(self, file):
