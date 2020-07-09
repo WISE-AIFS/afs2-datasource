@@ -482,7 +482,7 @@ manager = DBManager(
   buckets=[{
     'bucket': {BUCKET_NAME},
     'blobs': {
-      'files': ['dataset/train.csv'],
+      'files': ['titanic.csv'],
       'folders': ['models/']
     }
   }]
@@ -500,8 +500,8 @@ manager.is_table_exist(table_name=bucket_name)
 manager.create_table(table_name=bucket_name)
 
 # Upload File to S3
-local_file = '../test.csv'
-s3_file = 'dataset/train.csv'
+local_file = '../titanic.csv'
+s3_file = 'titanic.csv'
 manager.insert(table_name=bucket_name, source=local_file, destination=s3_file)
 
 # Download files in blob_list
@@ -550,7 +550,7 @@ manager = DBManager(
  containers=[{
    'container': {CONTAINER_NAME},
    'blobs': {
-     'files': ['titanic.csv', 'models/train.csv'],
+     'files': ['titanic.csv'],
      'folders': ['test/']
    }
  }]
@@ -568,8 +568,8 @@ manager.is_table_exist(table_name=container_name)
 manager.create_table(table_name=container_name)
 
 # Upload File to Azure Blob
-local_file = '../test.csv'
-azure_file = 'models/train.csv'
+local_file = '../titanic.csv'
+azure_file = 'titanic.csv'
 manager.insert(table_name=container_name, source=local_file, destination=azure_file)
 
 # Download files in `containers`
