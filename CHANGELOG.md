@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.2.5] - 2020-07-14
+### Changed
+- APMHelper
+  - For EnSaaS 4.0 APM
+
 ## [2.1.28] - 2019-12-06
 ### Added
 - S3Helper
@@ -8,7 +13,7 @@ All notable changes to this project will be documented in this file.
 - Delete table, bucket or container
 - Delete record in Postgres and MongoDB, and file in S3 and AzureBlob
 ### Changed
-- APMHepler
+- APMHelper
     - init
     - execute_query return format
 

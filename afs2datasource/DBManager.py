@@ -193,7 +193,7 @@ class DBManager:
       query = {
         'apm_config': data.get('apm_config', []),
         'time_range': data.get('timeRange', []),
-        'time_last': data.get('timeLast', [])
+        'time_last': data.get('timeLast', {})
       }
     else:
       query = data.get('querySql', None)

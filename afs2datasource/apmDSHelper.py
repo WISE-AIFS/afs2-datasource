@@ -35,14 +35,17 @@ class APMDSHelper():
     self._db = ''
     if self._influx_url:
       self._db_type = const.DB_TYPE['INFLUXDB']
-    else:
+    elif self._mongo_url:
       self._db_type = const.DB_TYPE['MONGODB']
+    else:
+      self._db_type = const.DB_TYPE['APM']
 
   async def connect(self):
     if self._connection is None:
-      self._connection = motor.motor_asyncio.AsyncIOMotorClient(self._mongo_url)
-      data = await self._connection.server_info()
-      self._db = self._mongo_url.split('/')[-1]
+      if self._db_type == const.DB_TYPE['MONGODB']:
+        self._connection = motor.motor_asyncio.AsyncIOMotorClient(self._mongo_url)
+        data = await self._connection.server_info()
+        self._db = self._mongo_url.split('/')[-1]
       self._token = self._get_token()
 
   def disconnect(self):
@@ -63,16 +66,16 @@ class APMDSHelper():
         time['start'] = parse(time.get('start'))
         time['end'] = parse(time.get('end')) + timedelta(days=1)
     elif query['time_last']:
-      days = query['time_last'].get('lastDays', 0)
-      hours = query['time_last'].get('lastHours', 0)
-      mins = query['time_last'].get('lastMins', 0)
+      days = int(query['time_last'].get('lastDays', 0))
+      hours = int(query['time_last'].get('lastHours', 0))
+      mins = int(query['time_last'].get('lastMins', 0))
       if days + hours + mins == 0:
         raise ValueError('time_last is invalid')
       now = datetime.now()
-      query['time_range'] = {
-        'start': now - datetime.timedelta(days=days, hours=hours, minutes=mins),
+      query['time_range'] = [{
+        'start': now - timedelta(days=days, hours=hours, minutes=mins),
         'end': now
-      }
+      }]
       del query['time_last']
     
     # check apm config
@@ -89,7 +92,7 @@ class APMDSHelper():
     return query
 
   def _get_token(self):
-    url = urljoin(self._apm_url, '/auth/login')
+    url = urljoin(self._apm_url, 'api-apm/auth/login')
     body = {
       'userName': self._username,
       'password': self._password
@@ -118,9 +121,27 @@ class APMDSHelper():
     resp_dict = {}
     for idx, value in enumerate(resp):
       resp_dict[query['apm_config'][idx]['name']] = value
+    
+    if len(resp_dict) == 1:
+      _, resp_dict = resp_dict.popitem()
     return resp_dict
 
   async def _execute_query_by_config(self, time_range, query):
+    # if self._db_type == const.DB_TYPE['APM']:
+    #   query_list = []
+    #   for machine in query.get('machines', []):
+    #     for parameter in query.get('parameters', []):
+    #       for time in time_range:
+    #         query_list.append({
+    #           'node_id': machine['id'],
+    #           'sensor_type': 'monitor',
+    #           'sensor_name': parameter,
+    #           'start_ts': time['start'],
+    #           'end_ts': time['end']
+    #         })
+    #   df_list = await asyncio.gather(*[self._execute_query_by_apm(query) for query in query_list])
+
+    # else:
     # format the apm config
     machine_list = query.get('machines', [])
     query_list = []
@@ -145,7 +166,7 @@ class APMDSHelper():
 
   def _get_machine_info(self, query):
     # get apm node info by node id
-    url = urljoin(self._apm_url, '/topo/node/detail/info')
+    url = urljoin(self._apm_url, 'api-apm/topo/node/detail/info')
     header = {'Authorization': 'Bearer ' + self._token}
     params = {'id': query['id']}
     query_list = []
@@ -195,19 +216,47 @@ class APMDSHelper():
       # generate sql
       ts = list(map(lambda ts: {'ts': {'$gte': ts['start'], '$lte': ts['end']}}, time_range))
       sql = {
-        's': query['scada_id'],
-        't': '{device_id}\\{tag_name}'.format(device_id=query['device_id'], tag_name=query['tag_name']),
+        't': query['tag_name'],
         '$or': ts
       }
       # query data
-      collection = 'scada_HistRawData'
-      docs = self._connection[self._db][collection].find(sql, {'_id':0, 's':0, 't':0}).sort('ts',ASCENDING)
+      collection = 'datahub_HistRawData_{node_id}_{device_id}'.format(
+        node_id=query['scada_id'],
+        device_id=query['device_id']
+      )
+      docs = self._connection[self._db][collection].find(sql, {'_id':0, 't':0}).sort('ts',ASCENDING)
       data = await docs.to_list(length=None)
       data = pd.DataFrame(data, columns=['ts', 'v']).rename(columns={'v': query['parameter']})
     else: # influx db
       data = pd.DataFrame(columns=['ts', 'v']).rename(columns={'v': query['parameter']})
     return data
   
+  async def _execute_query_by_apm(self, query):
+    node_id = query['node_id']
+    sensor_type = query['sensor_type']
+    sensor_name = query['sensor_name']
+    start_ts = query['start_ts']
+    end_ts = query['end_ts']
+
+    paginator = True
+    while paginator:
+      url = urljoin(self._apm_url, 'api-apm/hist/raw/data')
+      params = {
+        'nodeId': node_id,
+        'sensorType': sensor_type,
+        'sensorName': sensor_name,
+        'startTs': start_ts,
+        'endTs': end_ts,
+        'count': 10000
+      }
+      header = {'Authorization': 'Bearer ' + self._token}
+      resp = requests.get(
+        url,
+        headers=header,
+        params=params
+      )
+      print(resp)
+
   def _combine_data(self, df_list):
     for idx, df in enumerate(df_list):
       if idx == 0:

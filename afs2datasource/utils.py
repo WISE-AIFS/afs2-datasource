@@ -104,7 +104,7 @@ def get_apm_credential_from_dataDir(data):
     raise AttributeError('No password in data')
   if not apm_url:
     raise AttributeError('No apmUrl in data')
-  if not mongo_url and not influx_url:
+  if not mongo_url:
     raise AttributeError('No mongouri in credential')
 
   return username, password, apm_url, mongo_url, influx_url
