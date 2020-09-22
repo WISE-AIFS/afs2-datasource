@@ -120,7 +120,12 @@ class DBManager:
     os.environ['PAI_DATA_DIR'] = json.dumps(dataDir)
 
   def _get_credential_from_env(self, dataDir):
-    if type(dataDir) is str:
+    if isinstance(dataDir, str):
+      try:
+        dataDir = base64.b64decode(dataDir.encode('ascii')).decode('ascii')
+        os.environ['PAI_DATA_DIR'] = dataDir
+      except:
+        logger.info('credential is not encrypt.')
       dataDir = json.loads(dataDir)
     db_type = dataDir.get('type', None)
     if db_type is None:

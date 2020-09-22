@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.3.5] - 2020-09-22
+### Added
+- DBManager
+  - encrypt data_dir
+
 ## [3.2.5] - 2020-07-14
 ### Changed
 - APMHelper

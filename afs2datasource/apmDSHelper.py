@@ -204,7 +204,7 @@ class APMDSHelper():
               'parameter': parameter
             })
           else:
-            raise ValueError('Machine {0} do not have {1} parameter.'.format(name, parameters))
+            raise ValueError('Machine {0} do not have {1} parameter.'.format(name, parameter))
         return query_list
       else:
         retry = retry + 1
