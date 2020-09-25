@@ -125,7 +125,7 @@ class DBManager:
         dataDir = base64.b64decode(dataDir.encode('ascii')).decode('ascii')
         os.environ['PAI_DATA_DIR'] = dataDir
       except:
-        logger.info('credential is not encrypt.')
+        pass
       dataDir = json.loads(dataDir)
     db_type = dataDir.get('type', None)
     if db_type is None:
