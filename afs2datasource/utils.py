@@ -17,8 +17,7 @@ import re
 import os
 import json
 
-def get_data_from_dataDir():
-  dataDir = os.getenv('PAI_DATA_DIR', {})
+def get_data_from_dataDir(dataDir):
   if type(dataDir) is str:
     dataDir = json.loads(dataDir)
   data = dataDir.get('data', {})

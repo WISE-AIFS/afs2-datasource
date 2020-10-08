@@ -26,24 +26,23 @@ TOTAL_FILES_COUNT = 0
 TOTAL_DOWNLOAD_FILES = 0
 
 class s3Helper():
-  def __init__(self):
+  def __init__(self, dataDir):
     self._connection = None
-    self._bucket = ''
+    data = utils.get_data_from_dataDir(dataDir)
+    self.endpoint, self.access_key, self.secret_key, self.is_verify = utils.get_s3_credential(data)
+      if not is_valid_endpoint_url(self.endpoint):
+        raise ValueError('Invalid endpoint: {}'.format(self.endpoint))
 
   async def connect(self):
-    data = utils.get_data_from_dataDir()
-    endpoint, access_key, secret_key, is_verify = utils.get_s3_credential(data)
     if self._connection is None:
-      if not is_valid_endpoint_url(endpoint):
-        raise ValueError('Invalid endpoint: {}'.format(endpoint))
       config = Config(signature_version='s3')
       connection = boto3.client(
         's3',
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        endpoint_url=endpoint,
+        aws_access_key_id=self.access_key,
+        aws_secret_access_key=self.secret_key,
+        endpoint_url=self.endpoint,
         config=config,
-        verify=is_verify
+        verify=self.is_verify
       )
       connection.list_buckets()['Buckets']
       self._connection = connection

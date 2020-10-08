@@ -14,35 +14,44 @@
 #    under the License. 
 
 import os
+import re
 import json
 import afs2datasource.constant as const
 import afs2datasource.utils as utils
 from pymongo import MongoClient, errors
 import pandas as pd
 
+ISODATE_PREFIX = 'afs-isotime-'
+import dateutil.parser
+def ISODateDecoder(dic):
+  for key, value in dic.items():
+    if not ISODATE_PREFIX in value:
+      continue
+    value = value.split(ISODATE_PREFIX)[-1]
+    try:
+      value = dateutil.parser.isoparse(value)
+    finally:
+      dic[key] = value
+  return dic
+
 class MongoHelper():
-  def __init__(self):
-    self._db = ''
-    self._collection = ''
+  def __init__(self, dataDir):
     self._connection = None
+    data = utils.get_data_from_dataDir(dataDir)
+    self.username, self.password, self.host, self.port, self.database = utils.get_credential_from_dataDir(data)
+    self._db = self.database
+    self._collection = data.get('collection', '')    
 
   async def connect(self):
     if self._connection is None:
-      data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential_from_dataDir(data)
-      uri = 'mongodb://{}:{}@{}:{}/{}'.format(username, password, host, port, database)
+      uri = 'mongodb://{}:{}@{}:{}/{}'.format(self.username, self.password, self.host, self.port, self.database)
       self._connection = MongoClient(uri)
       self._connection.server_info()
-      self._db = database
-      self._collection = data.get('collection', '')
   
   def disconnect(self):
     if self._connection:
       self._connection.close()
-      self._collection = ''
       self._connection = None
-      self._db = ''
-      self._collection = ''
 
   async def execute_query(self, querySql):
     if not self._collection:
@@ -54,7 +63,8 @@ class MongoHelper():
   def check_query(self, querySql):
     try:
       if type(querySql) is str:
-        querySql = json.loads(querySql)
+        querySql = re.compile('ISODate\("([^"]+)"\)').sub('"{}{}"'.format(ISODATE_PREFIX, '\\1'), querySql)
+        querySql = json.loads(querySql, object_hook=ISODateDecoder)
     except:
       raise ValueError('querySql is invalid')
     return querySql

@@ -26,13 +26,19 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class DBManager:
   def __init__(self, **config):
+    self.dataDir = os.getenv('PAI_DATA_DIR', None)
     if config:
-      self._get_credential_from_config(config)
-    dataDir = os.getenv('PAI_DATA_DIR', None)
-    if dataDir:
-      self._get_credential_from_env(dataDir)
+      self.dataDir = self._get_credential_from_config(config)
+    elif self.dataDir:
+      self.dataDir = self._get_credential_from_env(self.dataDir)
     else:
       raise ValueError('No DB config.')
+
+    self._db_type = self.dataDir.get('type', None)
+    if self._db_type is None:
+      raise AttributeError('No type in dataDir')
+    if self._db_type not in const.DB_TYPE.values():
+      raise ValueError('{0} is not support'.format(self._db_type))
     self._status = const.DB_STATUS['DISCONNECTED']
     self._helper = self._create_helper(self._db_type)
     self.loop = asyncio.get_event_loop()
@@ -117,46 +123,37 @@ class DBManager:
           }
         }
       }
-    os.environ['PAI_DATA_DIR'] = json.dumps(dataDir)
+    return dataDir
 
   def _get_credential_from_env(self, dataDir):
     if isinstance(dataDir, str):
       try:
         dataDir = base64.b64decode(dataDir.encode('ascii')).decode('ascii')
-        os.environ['PAI_DATA_DIR'] = dataDir
       except:
         pass
       dataDir = json.loads(dataDir)
-    db_type = dataDir.get('type', None)
-    if db_type is None:
-      raise AttributeError('No type in dataDir')
-    if db_type not in const.DB_TYPE.values():
-      raise ValueError('{0} is not support'.format(db_type))
-
-    self._status = const.DB_STATUS['DISCONNECTED']
-    self._helper = self._create_helper(db_type)
-    self._db_type = db_type
+    return dataDir
 
   def _create_helper(self, db_type):
     db_type = db_type.lower()
     if db_type == const.DB_TYPE['MONGODB']:
       import afs2datasource.mongoHelper as mongoHelper
-      return mongoHelper.MongoHelper()
+      return mongoHelper.MongoHelper(self.dataDir)
     elif db_type == const.DB_TYPE['POSTGRES']:
       import afs2datasource.postgresHelper as postgresHelper
-      return postgresHelper.PostgresHelper()
+      return postgresHelper.PostgresHelper(self.dataDir)
     elif db_type == const.DB_TYPE['INFLUXDB']:
       import afs2datasource.influxHelper as influxHelper
-      return influxHelper.InfluxHelper()
+      return influxHelper.InfluxHelper(self.dataDir)
     elif db_type == const.DB_TYPE['S3']:
       import afs2datasource.s3Helper as s3Helper
-      return s3Helper.s3Helper()
+      return s3Helper.s3Helper(self.dataDir)
     elif db_type == const.DB_TYPE['APM']:
       import afs2datasource.apmDSHelper as apmDSHelper
-      return apmDSHelper.APMDSHelper()
+      return apmDSHelper.APMDSHelper(self.dataDir)
     elif db_type == const.DB_TYPE['AZUREBLOB']:
       import afs2datasource.azureBlobHelper as azureBlobHelper
-      return azureBlobHelper.azureBlobHelper()
+      return azureBlobHelper.azureBlobHelper(self.dataDir)
     else:
       raise ValueError('{} not support db_type'.format(db_type))
 
@@ -187,7 +184,7 @@ class DBManager:
     return self._db_type
 
   def execute_query(self):
-    data = utils.get_data_from_dataDir()
+    data = utils.get_data_from_dataDir(self.dataDir)
     if not self.is_connected():
       raise RuntimeError('No connection.')
     if self._db_type == const.DB_TYPE['S3']:
@@ -206,20 +203,6 @@ class DBManager:
         raise AttributeError('No querySql in dataDir[data]')
     query = self._helper.check_query(query)
     return self.loop.run_until_complete(self._helper.execute_query(query))
-
-  def _apm_ds_filter(self, apm_config, select_type):
-    if select_type is 'machine_id':
-      machine_id_list = []
-      for i, e in enumerate(apm_config):
-        for m_i, m_e in enumerate(e['machines']):
-          machine_id_list.append(m_e['id'])
-      return machine_id_list
-    elif select_type is 'parameters':
-      parameter_list = []
-      for i, e in enumerate(apm_config):
-        for p_i, p_e in enumerate(e['parameters']):
-          parameter_list.append(p_e)
-      return parameter_list
 
   def is_table_exist(self, table_name=None):
     if table_name is None:

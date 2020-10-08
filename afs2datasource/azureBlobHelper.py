@@ -28,14 +28,14 @@ BLOBNOTFOUND = 'BlobNotFound'
 TOTAL_FILES_COUNT = 0
 
 class azureBlobHelper():
-  def __init__(self):
+  def __init__(self, dataDir):
     self._connection = None
+    data = utils.get_data_from_dataDir(dataDir)
+    self.account_name, self.account_key = utils.get_azure_blob_credential(data)
 
   async def connect(self):
-    data = utils.get_data_from_dataDir()
-    account_name, account_key = utils.get_azure_blob_credential(data)
     if self._connection is None:
-      connection = BlockBlobService(account_name=account_name, account_key=account_key)
+      connection = BlockBlobService(account_name=self.account_name, account_key=self.account_key)
       connection.list_containers()
       self._connection = connection
   

@@ -28,9 +28,9 @@ from datetime import datetime, timedelta
 RETRY = 5
 
 class APMDSHelper():
-  def __init__(self):
+  def __init__(self, dataDir):
     self._connection = None
-    data = utils.get_data_from_dataDir()
+    data = utils.get_data_from_dataDir(dataDir)
     self._username, self._password, self._apm_url, self._mongo_url, self._influx_url = utils.get_apm_credential_from_dataDir(data)
     self._db = ''
     if self._influx_url:

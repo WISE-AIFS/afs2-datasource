@@ -414,6 +414,10 @@ manager = DBManager(
  querySql={QUERYSQL}
 )
 
+## Mongo query ISODate Example
+QUERYSQL = "{\"ts\": {\"$lte\": ISODate(\"2020-09-26T02:53:00Z\")}}"
+QUERYSQL = {'ts': {'$lte': datetime.datetime(2020,9,26,2,53,0)}}
+
 # Connect DB
 manager.connect()
 

@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - DBManager
   - encrypt data_dir
+- MongoHelper
+  - support ISODate query string
 
 ## [3.2.5] - 2020-07-14
 ### Changed

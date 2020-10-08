@@ -21,14 +21,14 @@ from influxdb import InfluxDBClient
 import pandas as pd
 
 class InfluxHelper():
-  def __init__(self):
+  def __init__(self, dataDir):
     self._connection = None
+    data = utils.get_data_from_dataDir(dataDir)
+    self.username, self.password, self.host, self.port, self.database = utils.get_credential_from_dataDir(data)
 
   async def connect(self):
     if self._connection is None:
-      data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential_from_dataDir(data)
-      self._connection = InfluxDBClient(database=database, username=username, password=password, host=host, port=port)
+      self._connection = InfluxDBClient(database=self.database, username=self.username, password=self.password, host=self.host, port=self.port)
   
   def disconnect(self):
     if self._connection:

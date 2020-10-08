@@ -21,22 +21,19 @@ import pandas as pd
 from functools import wraps
 
 class PostgresHelper():
-  def __init__(self):
+  def __init__(self, dataDir):
     self._connection = None
-    self._username = ''
+    data = utils.get_data_from_dataDir(dataDir)
+    self.username, self.password, self.host, self.port, self.database = utils.get_credential_from_dataDir(data)
 
   async def connect(self):
     if self._connection is None:
-      data = utils.get_data_from_dataDir()
-      username, password, host, port, database = utils.get_credential_from_dataDir(data)
-      self._connection = psycopg2.connect(database=database, user=username, password=password, host=host, port=port)
-      self._username = username
+      self._connection = psycopg2.connect(database=self.database, user=self.username, password=self.password, host=self.host, port=self.port)
   
   def disconnect(self):
     if self._connection:
       self._connection.close()
       self._connection = None
-      self._username = ''
   
   async def execute_query(self, querySql):
     cursor = self._connection.cursor()
@@ -85,7 +82,7 @@ class PostgresHelper():
     schema = table_name[0]
     table = table_name[1]
     cursor = self._connection.cursor()
-    command = 'CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION "{username}"'.format(schema=schema, username=self._username)
+    command = 'CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION "{username}"'.format(schema=schema, username=self.username)
     cursor.execute(command)
     command = 'CREATE TABLE {schema}.{table} ('.format(schema=schema, table=table)
     fields = []
