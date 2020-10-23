@@ -27,7 +27,7 @@ def ISODateDecoder(dic):
   for key, value in dic.items():
     if not ISODATE_PREFIX in value:
       continue
-    value = value.split(ISODATE_PREFIX)[-1]
+    value = value.split(ISODATE_PREFIX)[-1].strip()
     try:
       value = dateutil.parser.isoparse(value)
     finally:

@@ -1,10 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.3.5] - 2020-10-08
+## [3.3.5.5] - 2020-10-22
 ### Added
 - DBManager
   - encrypt data_dir
+  - execute_query() support user provided query
 - MongoHelper
   - support ISODate query string
 

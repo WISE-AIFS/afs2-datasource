@@ -183,24 +183,13 @@ class DBManager:
   def get_dbtype(self):
     return self._db_type
 
-  def execute_query(self):
+  def execute_query(self, query=None):
     data = utils.get_data_from_dataDir(self.dataDir)
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    if self._db_type == const.DB_TYPE['S3']:
-      query = data.get('buckets', [])
-    elif self._db_type == const.DB_TYPE['AZUREBLOB']:
-      query = data.get('containers', [])
-    elif self._db_type == const.DB_TYPE['APM']:
-      query = {
-        'apm_config': data.get('apm_config', []),
-        'time_range': data.get('timeRange', []),
-        'time_last': data.get('timeLast', {})
-      }
-    else:
-      query = data.get('querySql', None)
-      if not query and not(type(query) is dict):
-        raise AttributeError('No querySql in dataDir[data]')
+    
+    if query is None:
+      query = self.get_query()
     query = self._helper.check_query(query)
     return self.loop.run_until_complete(self._helper.execute_query(query))
 
@@ -289,3 +278,22 @@ class DBManager:
       'is_primary': True if 'is_primary' in col and col['is_primary'] else False,
       'is_not_null': True if 'is_not_null' in col and col['is_not_null'] else False,
     }
+
+  def get_query(self):
+    data = self.dataDir.get('data', {})
+    query = {}
+    if self._db_type == const.DB_TYPE['S3']:
+      query = data.get('buckets', [])
+    elif self._db_type == const.DB_TYPE['AZUREBLOB']:
+      query = data.get('containers', [])
+    elif self._db_type == const.DB_TYPE['APM']:
+      query = {
+        'apm_config': data.get('apm_config', []),
+        'time_range': data.get('timeRange', []),
+        'time_last': data.get('timeLast', {})
+      }
+    else:
+      query = data.get('querySql', None)
+      if not query and not(type(query) is dict):
+        raise AttributeError('No querySql in dataDir[data]')
+    return query
