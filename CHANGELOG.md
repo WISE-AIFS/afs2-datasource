@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.3.5.5] - 2020-10-22
+## [3.3.5.6] - 2020-10-27
 ### Added
 - DBManager
   - encrypt data_dir

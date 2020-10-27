@@ -30,8 +30,8 @@ class s3Helper():
     self._connection = None
     data = utils.get_data_from_dataDir(dataDir)
     self.endpoint, self.access_key, self.secret_key, self.is_verify = utils.get_s3_credential(data)
-      if not is_valid_endpoint_url(self.endpoint):
-        raise ValueError('Invalid endpoint: {}'.format(self.endpoint))
+    if not is_valid_endpoint_url(self.endpoint):
+      raise ValueError('Invalid endpoint: {}'.format(self.endpoint))
 
   async def connect(self):
     if self._connection is None:
