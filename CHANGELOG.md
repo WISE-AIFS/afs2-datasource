@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.4.0] - 2020-11-30
+- AzureBlobHelper & S3Helper
+  - check container name & bucket name
+
 ## [3.3.5.6] - 2020-10-27
 ### Added
 - DBManager
