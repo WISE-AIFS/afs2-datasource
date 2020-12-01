@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.4.1] - 2020-12-01
+- AzureBlobHelper & S3Helper
+  - exceute_query() return dataframe if only download one csv file
+
 ## [3.4.0] - 2020-11-30
 - AzureBlobHelper & S3Helper
   - check container name & bucket name

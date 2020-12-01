@@ -18,6 +18,7 @@ import os
 import asyncio
 import logging
 import concurrent
+import pandas as pd
 import afs2datasource.utils as utils
 from azure.storage.blob import BlockBlobService
 from azure.common import AzureHttpError
@@ -51,6 +52,14 @@ class azureBlobHelper():
         TOTAL_FILE_COUNT = 0
         query_list = self._generate_download_list(query_list)
         await asyncio.gather(*[self._download_file(query) for query in query_list])
+        if len(query_list) == 1 and query_list[0]['file'].endswith('.csv'):
+            try:
+                file_path = os.path.join(
+                    query_list[0]['container'], query_list[0]['file'])
+                df = pd.read_csv(file_path)
+                return df
+            except Exception as e:
+                pass
         return list(set([query['container'] for query in query_list]))
 
     def _generate_download_list(self, query_list):

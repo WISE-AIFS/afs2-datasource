@@ -18,6 +18,7 @@ import os
 import boto3
 import asyncio
 import logging
+import pandas as pd
 import afs2datasource.utils as utils
 from botocore.utils import is_valid_endpoint_url
 from botocore.client import Config
@@ -63,6 +64,14 @@ class s3Helper():
         TOTAL_DOWNLOAD_FILES = 0
         print("\n-------START DOWNLOAD FILES-------")
         await asyncio.gather(*[self._download_file(file) for file in file_list])
+        if len(file_list) == 1 and file_list[0]['file'].endswith('.csv'):
+            try:
+                file_path = os.path.join(
+                    file_list[0]['bucket'], file_list[0]['file'])
+                df = pd.read_csv(file_path)
+                return df
+            except Exception as e:
+                pass
         return list(set([file_obj['bucket'] for file_obj in file_list]))
 
     async def _download_file(self, file):

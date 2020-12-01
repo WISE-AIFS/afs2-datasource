@@ -180,6 +180,7 @@ manager.get_dbtype()
 Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
 
 Download files which are specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of the array.
+If only download one csv file, then return dataframe.
 
 Return dataframe of list which  of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
 
@@ -200,15 +201,37 @@ df = manager.execute_query()
 # For Azure Blob
 container_names = manager.execute_query()
 # Return Array
+# Return type: DataFrame
 """
 ['container1', 'container2']
 """
+# or Return type: DataFrame
+"""
+      Age  Cabin  Embarked      Fare  ...  Sex  Survived  Ticket_info  Title2
+0    22.0    7.0       2.0    7.2500  ...  1.0       0.0          2.0     2.0
+1    38.0    2.0       0.0   71.2833  ...  0.0       1.0         14.0     3.0
+2    26.0    7.0       2.0    7.9250  ...  0.0       1.0         31.0     1.0
+3    35.0    2.0       2.0   53.1000  ...  0.0       1.0         36.0     3.0
+4    35.0    7.0       2.0    8.0500  ...  1.0       0.0         36.0     2.0
+...
+"""
+
 
 # For S3
 bucket_names = manager.execute_query()
 # Return Array
 """
 ['bucket1', 'bucket2']
+"""
+# or Return type: DataFrame
+"""
+      Age  Cabin  Embarked      Fare  ...  Sex  Survived  Ticket_info  Title2
+0    22.0    7.0       2.0    7.2500  ...  1.0       0.0          2.0     2.0
+1    38.0    2.0       0.0   71.2833  ...  0.0       1.0         14.0     3.0
+2    26.0    7.0       2.0    7.9250  ...  0.0       1.0         31.0     1.0
+3    35.0    2.0       2.0   53.1000  ...  0.0       1.0         36.0     3.0
+4    35.0    7.0       2.0    8.0500  ...  1.0       0.0         36.0     2.0
+...
 """
 
 ```
