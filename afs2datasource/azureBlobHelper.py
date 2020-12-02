@@ -123,7 +123,7 @@ class azureBlobHelper():
         Bucket names must start with a lowercase letter or number.
         """
 
-        reg = "/^[a-z0-9-]{3,63}$/"
+        reg = "^[a-z0-9-]{3,63}$"
         return re.match(reg, table_name)
 
     def check_query(self, query_list):

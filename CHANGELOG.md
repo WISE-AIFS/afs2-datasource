@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## [3.4.2] - 2020-12-02
+- Fix Regex bug
+
 ## [3.4.1] - 2020-12-01
 - AzureBlobHelper & S3Helper
   - exceute_query() return dataframe if only download one csv file
