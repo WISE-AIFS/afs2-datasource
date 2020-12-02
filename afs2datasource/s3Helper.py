@@ -109,12 +109,16 @@ class s3Helper():
     def is_table_exist(self, table_name):
         # table_name is bucket
         try:
-            bucket_list = [bucket['Name']
-                           for bucket in self._connection.list_buckets()['Buckets']]
-            return table_name in bucket_list
+            self._connection.head_bucket(Bucket=table_name)
+            return True
+            # bucket_list = [bucket['Name']
+            #                for bucket in self._connection.list_buckets()['Buckets']]
+            # return table_name in bucket_list
         except TypeError as e:
             raise Exception(e)
         except Exception as e:
+            if e.response['Error']['Code'] == '404':
+                return False
             raise Exception(e.response['Error']['Message'])
 
     def is_file_exist(self, table_name, file_name):

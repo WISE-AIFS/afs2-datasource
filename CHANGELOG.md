@@ -1,6 +1,8 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unrelease]
+- Fix S3 Bucket forbidden
 
 ## [3.4.2] - 2020-12-02
 - Fix Regex bug
