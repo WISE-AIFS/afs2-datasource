@@ -169,11 +169,10 @@ class APMDSHelper():
     url = urljoin(self._apm_url, 'api-apm/topo/node/detail/info')
     header = {'Authorization': 'Bearer ' + self._token}
     params = {'id': query['id']}
-    query_list = []
 
     # no tag_name is query
     if len(query['parameters']) == 0:
-      return query_list
+      return []
 
     retry = 0
     while retry < RETRY:
@@ -186,26 +185,27 @@ class APMDSHelper():
         resp = resp.json()
         name = resp.get('name', '')
         dtInstance = resp.get('dtInstance', {})
-        property = dtInstance.get('property', {})
-        iotSense = property.get('iotSense', {})
+        iotSense = dtInstance.get('property', {}).get('iotSense', {})
         if not ('deviceId' in iotSense and 'groupId' in iotSense):
           raise ValueError('APM response format error')
         scada_id = iotSense['groupId']
         device_id = iotSense['deviceId'].split('@')[-1]
-        feature = dtInstance.get('feature', {})
-        monitor = feature.get('monitor', [])
+        monitor = dtInstance.get('feature', {}).get('monitor', [])
+        tags = []
         for parameter in query['parameters']:
           tag = next((t for t in monitor if t['name'] == parameter), {})
           if tag:
-            query_list.append({
-              'scada_id': scada_id,
-              'device_id': device_id,
+            tags.append({
               'tag_name': tag['tag'].split('@')[-1],
               'parameter': parameter
             })
           else:
             raise ValueError('Machine {0} do not have {1} parameter.'.format(name, parameter))
-        return query_list
+        return [{
+          'scada_id': scada_id,
+          'device_id': device_id,
+          'tags': tags
+        }]
       else:
         retry = retry + 1
     raise RuntimeError('Get Machine Id {0} detail failed: {1}'.format(query['id'], resp))
@@ -216,17 +216,21 @@ class APMDSHelper():
       # generate sql
       ts = list(map(lambda ts: {'ts': {'$gte': ts['start'], '$lte': ts['end']}}, time_range))
       sql = {
-        't': query['tag_name'],
+        'deviceId': query['device_id'],
         '$or': ts
       }
       # query data
-      collection = 'datahub_HistRawData_{node_id}_{device_id}'.format(
-        node_id=query['scada_id'],
-        device_id=query['device_id']
+      collection = 'datahub_HistRawData_{node_id}'.format(
+        node_id=query['scada_id']
       )
-      docs = self._connection[self._db][collection].find(sql, {'_id':0, 't':0}).sort('ts',ASCENDING)
+      projection = { tag['tag_name']: 1 for tag in query['tags'] }
+      projection.update({ '_id': 0, 'ts': 1 })
+      docs = self._connection[self._db][collection].find(sql, projection).sort('ts',ASCENDING)
       data = await docs.to_list(length=None)
-      data = pd.DataFrame(data, columns=['ts', 'v']).rename(columns={'v': query['parameter']})
+
+      rename = { tag['tag_name']: tag['parameter'] for tag in query['tags'] }
+
+      data = pd.DataFrame(data, columns=['ts'] + list(rename.keys())).rename(columns=rename)
     else: # influx db
       data = pd.DataFrame(columns=['ts', 'v']).rename(columns={'v': query['parameter']})
     return data
