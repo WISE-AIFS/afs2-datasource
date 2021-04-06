@@ -107,3 +107,13 @@ def get_apm_credential_from_dataDir(data):
     raise AttributeError('No mongouri in credential')
 
   return username, password, apm_url, mongo_url, influx_url
+
+def get_datahub_credential_from_dataDir(data):
+  credential = data.get('credential', {})
+  mongo_url = credential.get('uri', None)
+  influx_url = credential.get('influx_uri', None)
+
+  if not mongo_url:
+    raise AttributeError('No mongouri in credential')
+
+  return mongo_url, influx_url

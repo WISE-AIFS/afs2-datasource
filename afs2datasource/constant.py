@@ -25,5 +25,6 @@ DB_TYPE = {
   'INFLUXDB': 'influxdb-firehose',
   'S3': 's3-firehose',
   'APM': 'apm-firehose',
-  'AZUREBLOB': 'azure-firehose'
+  'AZUREBLOB': 'azure-firehose',
+  'DATAHUB': 'datahub-firehose',
 }

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [Unrelease]
 - Fix S3 Bucket forbidden
 - Added #18389 - APM3.0 + Datahub3.0
+- Added #18718 - DataHub Helper
 - Added #19203 - Upgrade pandas version
 
 ## [3.4.2] - 2020-12-02

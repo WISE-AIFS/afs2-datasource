@@ -154,6 +154,9 @@ class DBManager:
     elif db_type == const.DB_TYPE['AZUREBLOB']:
       import afs2datasource.azureBlobHelper as azureBlobHelper
       return azureBlobHelper.azureBlobHelper(self.dataDir)
+    elif db_type == const.DB_TYPE['DATAHUB']:
+      import afs2datasource.dataHubHelper as dataHubHelper
+      return dataHubHelper.dataHubHelper(self.dataDir)
     else:
       raise ValueError('{} not support db_type'.format(db_type))
 
@@ -289,6 +292,12 @@ class DBManager:
     elif self._db_type == const.DB_TYPE['APM']:
       query = {
         'apm_config': data.get('apm_config', []),
+        'time_range': data.get('timeRange', []),
+        'time_last': data.get('timeLast', {})
+      }
+    elif self._db_type == const.DB_TYPE['DATAHUB']:
+      query = {
+        'config': data.get('datahub_config', []),
         'time_range': data.get('timeRange', []),
         'time_last': data.get('timeLast', {})
       }
