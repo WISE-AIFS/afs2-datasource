@@ -1,5 +1,5 @@
 pymongo==3.7.2
-pandas==0.24.2
+pandas>=1.0.0, <2.0
 psycopg2-binary==2.8.1
 influxdb==5.2.2
 boto3==1.9.156
