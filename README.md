@@ -135,9 +135,33 @@ manager = DBManager(db_type=constant.DB_TYPE['AZUREBLOB'],
     }
   }]
 )
+
+# For DataHub
+manager = DBManager(db_type=constant.DB_TYPE['DATAHUB'],
+  username=username,  # sso username
+  password=password,  # sso password
+  datahub_url=datahub_url,
+  datahub_config=[{
+    "name": "string", # dataset name
+    "project_id": "project_id",
+    "node_id": "node_id",
+    "device_id": "device_id",
+    "tags": [
+      "tag_name"
+    ]
+  }],
+  mongouri=mongouri,
+  # timeRange or timeLast
+  timeRange=[{'start': start_ts, 'end': end_ts}],
+  timeLast={'lastDays:' lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+)
 ```
 ##### How to get APM machine id and parameters
 ![Alt text](apm_document.jpg)
+
+##### How to get DataHub project id, node id, device id and tag
+![Alt text](datahub.gif)
+
 ----
 <a name="connect"></a>
 #### DBManager.connect()

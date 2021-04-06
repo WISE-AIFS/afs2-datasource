@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unrelease]
 - Fix S3 Bucket forbidden
+- Added #18718 - DataHub Helper
 
 ## [3.4.2] - 2020-12-02
 - Fix Regex bug
