@@ -101,6 +101,22 @@ class DBManager:
           'containers': containers
         }
       }
+    elif db_type == const.DB_TYPE['DATAHUB']:
+      dataDir = {
+        'type': db_type,
+        'data': {
+          'timeRange': config.get('timeRange'),
+          'timeLast': config.get('timeLast'),
+          'datahub_config': config.get('datahub_config'),
+          'datahub_url': config.get('datahub_url'),
+          'credential': {
+            'uri': config.get('mongouri'),
+            'influxuri': config.get('influxuri'),
+          },
+          'username': config.get('username'),
+          'password': config.get('password'),
+        }
+      }
     else:
       username = config.get('username', None)
       password = config.get('password', None)
