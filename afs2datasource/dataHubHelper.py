@@ -13,19 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import asyncio
-import requests
 import pandas as pd
 import motor.motor_asyncio
 from pymongo import ASCENDING
-from urllib.parse import urljoin
+from influxdb import InfluxDBClient
 from dateutil.parser import parse
 import afs2datasource.utils as utils
 import afs2datasource.constant as const
+from afs2datasource.helper import Helper
 from datetime import datetime, timedelta
 
-class dataHubHelper():
+class DataHubHelper(Helper):
   def __init__(self, dataDir):
     self._connection = None
     data = utils.get_data_from_dataDir(dataDir)
@@ -37,8 +36,12 @@ class dataHubHelper():
     if self._connection is None:
       if self._db_type == const.DB_TYPE['MONGODB']:
         self._connection = motor.motor_asyncio.AsyncIOMotorClient(self._mongo_url)
-        data = await self._connection.server_info()
+        await self._connection.server_info()
         self._db = self._mongo_url.split('/')[-1]
+      elif self._db_type == const.DB_TYPE['INFLUXDB']:
+        username, password, host, port, database = utils.get_credential_from_uri(self._influx_url)
+        self._connection = InfluxDBClient(database=database, username=username, password=password, host=host, port=port)
+        self._connection.get_list_database()
 
   def disconnect(self):
     if self._connection:
@@ -87,6 +90,9 @@ class dataHubHelper():
 
 
   async def _execute_query(self, time_range, query):
+    if not len(query['tags']):
+      return pd.DataFrame(columns=['ts'])
+
     # according to db type
     if self._db_type == const.DB_TYPE['MONGODB']:
       # generate sql
@@ -105,7 +111,39 @@ class dataHubHelper():
       data = await docs.to_list(length=None)
       data = pd.DataFrame(data, columns=['ts'] + query['tags'])
     else: # influx db
-      data = pd.DataFrame(columns=['ts', 'v']).rename(columns={'v': query['parameter']})
+      measurement = 'HistRawData_{node_id}_{device_id}'.format(
+        node_id=query['node_id'],
+        device_id=query['device_id'],
+      )
+
+      tags = query['tags']
+
+      time_conditions = []
+      for ts in time_range:
+        condition = ''
+        if 'start' in ts:
+          # nano seconds
+          condition += 'time >= {}000'.format(int(ts['start'].timestamp() * 1000 * 1000))
+        if 'end' in ts:
+          if condition:
+            condition += ' and '
+          condition += 'time <= {}000'.format(int(ts['end'].timestamp() * 1000 * 1000))
+        time_conditions.append('({})'.format(condition))
+
+      query = 'SELECT * FROM "{measurement}" WHERE ({time_conditions}) AND ({tag_conditions})'.format(
+        measurement=measurement,
+        time_conditions=' OR '.join(time_conditions),
+        tag_conditions=' OR '.join(list(map(lambda tag: "id='{}'".format(tag), tags)))
+      )
+
+      records = list(self._connection.query(query).get_points())
+
+      data = {}
+      for record in records:
+        if record['time'] not in data:
+          data[record['time']] = {'ts': record['time']}
+        data[record['time']][record['id']] = record['tval'] if record['tval'] is not None else record['val']
+      data = pd.DataFrame(data.values(), columns=['ts'] + tags)
     
     return data
 

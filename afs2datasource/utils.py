@@ -110,10 +110,16 @@ def get_apm_credential_from_dataDir(data):
 
 def get_datahub_credential_from_dataDir(data):
   credential = data.get('credential', {})
-  mongo_url = credential.get('uri', None)
-  influx_url = credential.get('influx_uri', None)
+  uri = credential.get('uri', None)
+  
+  mongo_url, influx_url = None, None
 
-  if not mongo_url:
-    raise AttributeError('No mongouri in credential')
+  if uri.startswith('mongodb://'):
+    mongo_url = uri
+  elif uri.startswith('influxdb://'):
+    influx_url = uri
+
+  if not mongo_url and not influx_url:
+    raise AttributeError('No uri in credential')
 
   return mongo_url, influx_url

@@ -31,6 +31,7 @@ nest_asyncio.apply()
 + <a href="#is_connected"><code>DBManager.<b>is_connected()</b></code></a>
 + <a href="#is_connecting"><code>DBManager.<b>is_connecting()</b></code></a>
 + <a href="#get_dbtype"><code>DBManager.<b>get_dbtype()</b></code></a>
++ <a href="#get_query"><code>DBManager.<b>get_query()</b></code></a>
 + <a href="#execute_query"><code>DBManager.<b>execute_query()</b></code></a>
 + <a href="#create_table"><code>DBManager.<b>create_table(table_name, columns)</b></code></a>
 + <a href="#is_table_exist"><code>DBManager.<b>is_table_exist(table_name)</b></code></a>
@@ -150,10 +151,10 @@ manager = DBManager(db_type=constant.DB_TYPE['DATAHUB'],
       "tag_name"
     ]
   }],
-  mongouri=mongouri,
+  uri=mongouri, # mongouri or influxuri
   # timeRange or timeLast
   timeRange=[{'start': start_ts, 'end': end_ts}],
-  timeLast={'lastDays:' lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+  timeLast={'lastDays': lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
 )
 ```
 ##### How to get APM machine id and parameters
@@ -197,6 +198,92 @@ manager.is_connecting()
 Return database type of the connection.
 ```python
 manager.get_dbtype()
+```
+----
+<a name="get_query"></a>
+#### DBManager.get_query()
+Return query in the config.
+```python
+manager.get_query()
+
+# PostgreSQL
+# Return type: String
+"""
+select {field} from {schema}.{table}
+"""
+
+# MongoDB
+# Return type: String
+"""
+{"{key}": {value}}
+"""
+
+# InfluxDB
+# Return type: String
+"""
+select {field_key} from {measurement_name}
+"""
+
+# S3
+# Return type: List
+"""
+[{
+  'bucket': 'bucket_name',
+  'blobs': {
+    'files': ['file_name'],
+    'folders': ['folder_name']
+  }
+}]
+"""
+
+# Azure Blob
+# Return type: List
+"""
+[{
+  'container': container_name,
+  'blobs': {
+    'files': ['file_name']
+    'folders': ['folder_name']
+  }
+}]
+"""
+
+# APM
+# Return type: Dict
+"""
+{
+  'apm_config': [{
+    'name': name  # dataset name
+    'machines': [{
+      'id': machine_id  # node_id in APM
+    }],
+    'parameters': [
+      parameter1,      # parameter in APM
+      parameter2
+    ]
+  }],
+  'time_range': [{'start': start_ts, 'end': end_ts}],
+  'time_last': {'lastDays': lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+}
+"""
+
+# DataHub
+# Return type: Dict
+"""
+{
+  'config': [{
+    "name": "string", # dataset name
+    "project_id": "project_id",
+    "node_id": "node_id",
+    "device_id": "device_id",
+    "tags": [
+      "tag_name"
+    ]
+  }],
+  'time_range': [{'start': start_ts, 'end': end_ts}],
+  'time_last': {'lastDays': lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+}
+"""
 ```
 ----
 <a name="execute_query"></a>
@@ -417,11 +504,6 @@ Delete file in bucket in S3 and in container in Azure Blob,  and return if the f
 Note Influx not support this function.
 
 ```python
-# For Postgres
-table_name = 'titanic'
-condition = 'passenger_id = 1'
-is_success = manager.delete_record(table_name=table_name, condition=condition)
-# Return: Boolean
 
 # For Postgres
 table_name = 'titanic'
