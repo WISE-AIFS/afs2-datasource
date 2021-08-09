@@ -24,7 +24,8 @@ DB_TYPE = {
   'POSTGRES': 'postgresql-firehose',
   'INFLUXDB': 'influxdb-firehose',
   'S3': 's3-firehose',
-  'APM': 'apm-firehose',
   'AZUREBLOB': 'azure-firehose',
+  'AWS': 'aws-firehose',
+  'APM': 'apm-firehose',
   'DATAHUB': 'datahub-firehose',
 }

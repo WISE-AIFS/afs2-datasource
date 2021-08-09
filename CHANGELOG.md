@@ -1,11 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.7.1] - Unreleased
+### Added
+- #20773 - S3 helper support AWS S3
+
+
 ## [3.6.0] - 2021-06-08
 ### Added
-- Added #18389 - APM3.0 + Datahub3.0
-- Added #18718 - DataHub Helper
-- Added #19203 - Upgrade pandas version
+- #18389 - APM3.0 + Datahub3.0
+- #18718 - DataHub Helper
+- #19203 - Upgrade pandas version
 
 ### Fixed
 - Fix S3 Bucket forbidden

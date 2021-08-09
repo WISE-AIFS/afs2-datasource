@@ -19,37 +19,32 @@ import boto3
 import asyncio
 import logging
 import pandas as pd
-import afs2datasource.utils as utils
+from  afs2datasource.utils import get_s3_credential, is_table_name_invalid
+from afs2datasource.constant import DB_TYPE
+from afs2datasource.helper import Helper
 from botocore.utils import is_valid_endpoint_url
 from botocore.client import Config
-from botocore.exceptions import ClientError, EndpointConnectionError
+from botocore.exceptions import ClientError
 
 TOTAL_FILES_COUNT = 0
 TOTAL_DOWNLOAD_FILES = 0
 
 
-class s3Helper():
-    def __init__(self, dataDir):
+class s3Helper(Helper):
+    def __init__(self, credential, type):
         self._connection = None
-        data = utils.get_data_from_dataDir(dataDir)
-        self.endpoint, self.access_key, self.secret_key, self.is_verify = utils.get_s3_credential(
-            data)
-        if not is_valid_endpoint_url(self.endpoint):
-            raise ValueError('Invalid endpoint: {}'.format(self.endpoint))
+        self._type = type
+        self.endpoint, self.access_key, self.secret_key, self.is_verify = get_s3_credential(credential)
+
+        if type == DB_TYPE['S3']:
+            if not self.endpoint:
+                raise AttributeError('No endpoint in credential')
+            if not is_valid_endpoint_url(self.endpoint):
+                raise ValueError('Invalid endpoint: {}'.format(self.endpoint))
 
     async def connect(self):
         if self._connection is None:
-            config = Config(signature_version='s3')
-            connection = boto3.client(
-                's3',
-                aws_access_key_id=self.access_key,
-                aws_secret_access_key=self.secret_key,
-                endpoint_url=self.endpoint,
-                config=config,
-                verify=self.is_verify
-            )
-            connection.list_buckets()['Buckets']
-            self._connection = connection
+            self._connection = self._get_connection()
 
     def disconnect(self):
         self._connection = None
@@ -107,13 +102,10 @@ class s3Helper():
         return query_list
 
     def is_table_exist(self, table_name):
-        # table_name is bucket
         try:
-            self._connection.head_bucket(Bucket=table_name)
-            return True
-            # bucket_list = [bucket['Name']
-            #                for bucket in self._connection.list_buckets()['Buckets']]
-            # return table_name in bucket_list
+            bucket_list = [bucket['Name']
+                           for bucket in self._connection.list_buckets()['Buckets']]
+            return table_name in bucket_list
         except TypeError as e:
             raise Exception(e)
         except Exception as e:
@@ -123,7 +115,7 @@ class s3Helper():
 
     def is_file_exist(self, table_name, file_name):
         try:
-            response = self._connection.head_object(
+            _ = self._connection.head_object(
                 Bucket=table_name,
                 Key=file_name
             )
@@ -134,11 +126,18 @@ class s3Helper():
             else:
                 raise Exception(e.response['Error']['Message'])
 
-    def create_table(self, table_name, columns):
-        if not self._is_table_name_invalid(table_name):
+    def create_table(self, table_name, **kwargs):
+        region = kwargs.get('region', 'us-west-1')
+        if not is_table_name_invalid(table_name):
             raise ValueError(
                 'table_name / bucket_name is invalid. Use only lowercase letters and numbers, and at least 3 and no more than 63 characters long.')
-        self._connection.create_bucket(Bucket=table_name)
+
+        if self._type == DB_TYPE['S3']:
+            self._connection.create_bucket(Bucket=table_name)
+        else:
+            _connection = self._get_connection(region_name=region)
+            location = {'LocationConstraint': region}
+            _connection.create_bucket(Bucket=table_name, CreateBucketConfiguration=location)
 
     def insert(self, table_name, source, destination):
         try:
@@ -224,12 +223,29 @@ class s3Helper():
             Key=file_name
         )
 
-    def _is_table_name_invalid(self, table_name):
-        """
-        Bucket names must be at least 3 and no more than 63 characters long.
-        Bucket names must not contain uppercase characters or underscores.
-        Bucket names must start with a lowercase letter or number.
-        """
-
-        reg = "^[a-z0-9-]{3,63}$"
-        return re.match(reg, table_name)
+    def _get_connection(self, region_name=None):
+        if self._type == DB_TYPE['S3']:
+            connection = boto3.client(
+                's3',
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+                endpoint_url=self.endpoint,
+                config=Config(signature_version='s3'),
+                verify=self.is_verify
+            )
+        else:
+            if region_name:
+                connection = boto3.client(
+                    's3',
+                    aws_access_key_id=self.access_key,
+                    aws_secret_access_key=self.secret_key,
+                    region_name=region_name,
+                )
+            else:
+                connection = boto3.client(
+                    's3',
+                    aws_access_key_id=self.access_key,
+                    aws_secret_access_key=self.secret_key,
+                )
+        connection.list_buckets()['Buckets']    
+        return connection

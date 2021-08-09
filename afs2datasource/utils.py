@@ -71,8 +71,6 @@ def get_s3_credential(data):
   access_key = credential.get('accessKey', None)
   secret_key = credential.get('secretKey', None)
   is_verify = credential.get('is_verify', False)
-  if not endpoint:
-    raise AttributeError('No endpoint in credential')
   if not access_key:
     raise AttributeError('No accessKey in credential')
   if not secret_key:
@@ -117,3 +115,13 @@ def get_datahub_credential_from_dataDir(data):
     raise AttributeError('No mongouri in credential')
 
   return mongo_url, influx_url
+
+def is_table_name_invalid(table_name):
+  """
+  Bucket names must be at least 3 and no more than 63 characters long.
+  Bucket names must not contain uppercase characters or underscores.
+  Bucket names must start with a lowercase letter or number.
+  """
+
+  reg = "^[a-z0-9-]{3,63}$"
+  return re.match(reg, table_name)

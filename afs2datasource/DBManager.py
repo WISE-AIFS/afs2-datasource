@@ -21,6 +21,7 @@ import urllib3
 import pandas as pd
 import afs2datasource.constant as const
 import afs2datasource.utils as utils
+from afs2datasource.utils import get_data_from_dataDir
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -46,7 +47,7 @@ class DBManager:
   def _get_credential_from_config(self, config):
     dataDir = {}
     db_type = config.get('db_type', None)
-    if db_type == const.DB_TYPE['S3']:
+    if db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
       endpoint = config.get('endpoint', None)
       access_key = config.get('access_key', None)
       secret_key = config.get('secret_key', None)
@@ -161,9 +162,10 @@ class DBManager:
     elif db_type == const.DB_TYPE['INFLUXDB']:
       import afs2datasource.influxHelper as influxHelper
       return influxHelper.InfluxHelper(self.dataDir)
-    elif db_type == const.DB_TYPE['S3']:
-      import afs2datasource.s3Helper as s3Helper
-      return s3Helper.s3Helper(self.dataDir)
+    elif db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
+      from afs2datasource.s3Helper import s3Helper
+      credential = get_data_from_dataDir(self.dataDir)
+      return s3Helper(credential, db_type)
     elif db_type == const.DB_TYPE['APM']:
       import afs2datasource.apmDSHelper as apmDSHelper
       return apmDSHelper.APMDSHelper(self.dataDir)
@@ -228,7 +230,7 @@ class DBManager:
       raise RuntimeError('No connection.')
     return self._helper.is_file_exist(table_name=table_name, file_name=file_name)
 
-  def create_table(self, table_name=None, columns=[]):
+  def create_table(self, table_name=None, columns=[], **kwargs):
     if table_name is None:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
@@ -236,7 +238,7 @@ class DBManager:
     if self._helper.is_table_exist(table_name=table_name):
       raise ValueError('table_name is exist')
     columns = list(map(self._check_columns, columns))
-    self._helper.create_table(table_name=table_name, columns=columns)
+    self._helper.create_table(table_name=table_name, columns=columns, **kwargs)
     return True
 
   def insert(self, table_name=None, columns=(), records=[], source='', destination=''):
@@ -247,7 +249,7 @@ class DBManager:
         raise RuntimeError('No connection.')
       if not self._helper.is_table_exist(table_name=table_name) and self._db_type != const.DB_TYPE['INFLUXDB']:
         raise ValueError('table_name is not exist')
-      if self._db_type == const.DB_TYPE['S3'] or self._db_type == const.DB_TYPE['AZUREBLOB']:
+      if self._db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AZUREBLOB'], const.DB_TYPE['AWS']]:
         if not source or not destination:
           raise ValueError('source and destination is necessary')
         if destination.endswith('/'):
@@ -301,7 +303,7 @@ class DBManager:
   def get_query(self):
     data = self.dataDir.get('data', {})
     query = {}
-    if self._db_type == const.DB_TYPE['S3']:
+    if self._db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
       query = data.get('buckets', [])
     elif self._db_type == const.DB_TYPE['AZUREBLOB']:
       query = data.get('containers', [])
