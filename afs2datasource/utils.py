@@ -46,7 +46,6 @@ def get_credential_from_dataDir(data):
     return get_credential_from_uri(uri)
 
 def get_credential(credential):
-
   username = credential.get('username', None)
   password = credential.get('password', None)
   host = credential.get('host', None)

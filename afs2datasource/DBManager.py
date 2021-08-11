@@ -21,6 +21,7 @@ import urllib3
 import pandas as pd
 import afs2datasource.constant as const
 import afs2datasource.utils as utils
+from afs2datasource.utils import get_data_from_dataDir
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -152,6 +153,10 @@ class DBManager:
 
   def _create_helper(self, db_type):
     db_type = db_type.lower()
+    if db_type in [const.DB_TYPE['MYSQL']]:
+      from afs2datasource.mysqlHelper import mysqlHelper
+      credentail = get_data_from_dataDir(self.dataDir)
+      return mysqlHelper(credentail)
     if db_type == const.DB_TYPE['MONGODB']:
       import afs2datasource.mongoHelper as mongoHelper
       return mongoHelper.MongoHelper(self.dataDir)
@@ -247,7 +252,7 @@ class DBManager:
         raise RuntimeError('No connection.')
       if not self._helper.is_table_exist(table_name=table_name) and self._db_type != const.DB_TYPE['INFLUXDB']:
         raise ValueError('table_name is not exist')
-      if self._db_type == const.DB_TYPE['S3'] or self._db_type == const.DB_TYPE['AZUREBLOB']:
+      if self._db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AZUREBLOB']]:
         if not source or not destination:
           raise ValueError('source and destination is necessary')
         if destination.endswith('/'):
@@ -275,7 +280,7 @@ class DBManager:
       raise ValueError('table_name is necessary')
     if not self.is_connected():
       raise RuntimeError('No connection.')
-    if self.get_dbtype() == const.DB_TYPE['S3'] or self.get_dbtype() == const.DB_TYPE['AZUREBLOB']:
+    if self.get_dbtype() in [const.DB_TYPE['S3'], const.DB_TYPE['AZUREBLOB']]:
       if not file_name:
         raise ValueError('file_name is necessary')
       if self._helper.is_file_exist(table_name=table_name, file_name=file_name):

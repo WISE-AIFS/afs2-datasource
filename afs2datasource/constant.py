@@ -20,6 +20,7 @@ DB_STATUS = {
 }
 
 DB_TYPE = {
+  'MYSQL': 'mysql-firehose',
   'MONGODB': 'mongo-firehose',
   'POSTGRES': 'postgresql-firehose',
   'INFLUXDB': 'influxdb-firehose',
