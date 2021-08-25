@@ -142,7 +142,7 @@ class DataHubHelper(Helper):
       for record in records:
         if record['time'] not in data:
           data[record['time']] = {'ts': record['time']}
-        data[record['time']][record['id']] = record['tval'] if record['tval'] is not None else record['val']
+        data[record['time']][record['id']] = record['tval'] if ('tval' in record and record['tval'] is not None) else record['val']
       data = pd.DataFrame(data.values(), columns=['ts'] + tags)
     
     return data

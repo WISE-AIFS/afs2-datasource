@@ -110,7 +110,7 @@ def get_apm_credential_from_dataDir(data):
 
 def get_datahub_credential_from_dataDir(data):
   credential = data.get('credential', {})
-  uri = credential.get('uri', None)
+  uri = credential.get('uri', '')
   
   mongo_url, influx_url = None, None
 
