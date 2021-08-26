@@ -14,7 +14,6 @@
 #    under the License. 
 
 import re
-import os
 import json
 
 def get_data_from_dataDir(dataDir):

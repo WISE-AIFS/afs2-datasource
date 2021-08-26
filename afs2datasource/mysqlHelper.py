@@ -54,18 +54,18 @@ class mysqlHelper(Helper):
         data = pd.DataFrame(data=data, columns=columns)
         return data
 
-    def check_query(self, querySql):
+    def check_query(self, querySql) -> str:
         if type(querySql) is not str:
             raise ValueError('querySql is invalid')
         return querySql
 
-    def is_table_exist(self, table_name):
+    def is_table_exist(self, table_name) -> bool:
         cursor = self._connection.cursor()
         cursor.execute('SHOW TABLES')
         tables = [table[0] for table in cursor]
         return table_name in tables
 
-    def is_file_exist(self, **kwargs):
+    def is_file_exist(self, **kwargs) -> Exception:
         raise NotImplementedError('MySQL not implement.')
 
     def create_table(self, table_name, columns):
