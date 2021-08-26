@@ -120,7 +120,7 @@ manager = DBManager(db_type=constant.DB_TYPE['APM'],
   mongouri=mongouri,
   # timeRange or timeLast
   timeRange=[{'start': start_ts, 'end': end_ts}],
-  timeLast={'lastDays:' lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
+  timeLast={'lastDays': lastDay, 'lastHours': lastHour, 'lastMins': lastMin}
 )
 
 # For Azure Blob
