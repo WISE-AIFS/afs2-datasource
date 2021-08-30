@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.7.1] - Unreleased
+### Added
+- #20401 - MySql Helper
+
 ## [3.6.0] - 2021-06-08
 ### Added
 - Added #18389 - APM3.0 + Datahub3.0

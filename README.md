@@ -56,6 +56,16 @@ Import database config via Python.
 ```python
 from afs2datasource import DBManager, constant
 
+# For MySQL
+manager = DBManager(db_type=constant.DB_TYPE['MYSQL'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  database=database,
+  querySql="select {field} from {table}"
+)
+
 # For PostgreSQL
 manager = DBManager(db_type=constant.DB_TYPE['POSTGRES'],
   username=username,
@@ -165,7 +175,7 @@ manager = DBManager(db_type=constant.DB_TYPE['DATAHUB'],
 ----
 <a name="connect"></a>
 #### DBManager.connect()
-Connect to PostgreSQL, MongoDB, InfluxDB, S3, APM with specified by the given config.
+Connect to MySQL, PostgreSQL, MongoDB, InfluxDB, S3, APM with specified by the given config.
 ```python
 manager.connect()
 ```
@@ -197,19 +207,21 @@ manager.is_connecting()
 Return database type of the connection.
 ```python
 manager.get_dbtype()
+# Return: str
 ```
 ----
 <a name="execute_query"></a>
-#### DBManager.execute_query()
-Return the result in PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config.
+#### DBManager.execute_query(querySql=None)
+Return the result in MySQL, PostgreSQL, MongoDB or InfluxDB after executing the `querySql` in config or `querySql` parameter.
 
 Download files which are specified in `buckets` in S3 config or `containers` in Azure Blob config, and return `buckets` and `containers` name of the array.
-If only download one csv file, then return dataframe.
+If only download one csv file, then return `dataframe`.
 
 Return dataframe of list which  of `Machine` and `Parameter` in `timeRange` or `timeLast` from APM.
+Return dataframe of list which  of `Tag` in `timeRange` or `timeLast` from DataHub.
 
 ```python
-# For Postgres, MongoDB, InfluxDB and APM
+# For MySQL, Postgres, MongoDB, InfluxDB, APM and DataHub
 df = manager.execute_query()
 # Return type: DataFrame
 """
@@ -262,14 +274,14 @@ bucket_names = manager.execute_query()
 ----
 <a name="create_table"></a>
 #### DBManager.create_table(table_name, columns=[])
-Create table in database for Postgres, MongoDB and InfluxDB.
+Create table in database for MySQL, Postgres, MongoDB and InfluxDB.
 Noted, to create a new measurement in influxdb simply insert data into the measurement.
 
 Create Bucket/Container in S3/Azure Blob.
 
 Note: PostgreSQL table_name format **schema.table**
 ```python
-# For Postgres, MongoDB and InfluxDB
+# For MySQL, Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 columns = [
   {'name': 'index', 'type': 'INTEGER', 'is_primary': True},
@@ -290,7 +302,7 @@ manager.create_table(table_name=container_name)
 ----
 <a name="is_table_exist"></a>
 #### DBManager.is_table_exist(table_name)
-Return if the table exists in Postgres, MongoDB or Influxdb.
+Return if the table exists in MySQL, Postgres, MongoDB or Influxdb.
 
 Return if the bucket exists in S3.
 
@@ -332,12 +344,12 @@ manager.is_file_exist(table_name=container_name, file_name=file_name)
 ----
 <a name="insert"></a>
 #### DBManager.insert(table_name, columns=[], records=[], source='', destination='')
-Insert records into table in Postgres, MongoDB or InfluxDB.
+Insert records into table in MySQL, Postgres, MongoDB or InfluxDB.
 
 Upload file to S3 and Azure Blob.
 
 ```python
-# For Postgres, MongoDB and InfluxDB
+# For MySQL, Postgres, MongoDB and InfluxDB
 table_name = 'titanic'
 columns = ['index', 'survived', 'age', 'embarked']
 records = [
@@ -385,7 +397,7 @@ manager.insert(table_name=container_name, source=source, destination=destination
 ----
 <a name="delete_table"></a>
 #### DBManager.delete_table(table_name)
-Delete table in Postgres, MongoDB or InfluxDB, and return if the table is deleted successfully.
+Delete table in MySQL, Postgres, MongoDB or InfluxDB, and return if the table is deleted successfully.
 
 Delete the bucket in S3 and return if the table is deleted successfully.
 
@@ -410,20 +422,20 @@ is_success = manager.delete_table(table_name=container_name)
 ----
 <a name="delete_record"></a>
 #### DBManager.delete_record(table_name, file_name, condition)
-Delete record with `condition` in `table_name` in Postgres and MongoDB, and return if delete successfully.
+Delete record with `condition` in `table_name` in MySQL, Postgres and MongoDB, and return if delete successfully.
 
 Delete file in bucket in S3 and in container in Azure Blob,  and return if the file is deleted successfully.
 
 Note Influx not support this function.
 
 ```python
-# For Postgres
+# For MySQL, Postgres
 table_name = 'titanic'
 condition = 'passenger_id = 1'
 is_success = manager.delete_record(table_name=table_name, condition=condition)
 # Return: Boolean
 
-# For Postgres
+# For MongoDB
 table_name = 'titanic'
 condition = {'passanger_id': 1}
 is_success = manager.delete_record(table_name=table_name, condition=condition)
