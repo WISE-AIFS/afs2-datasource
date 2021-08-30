@@ -112,6 +112,19 @@ manager = DBManager(db_type=constant.DB_TYPE['S3'],
   }]
 )
 
+# For AWS S3
+manager = DBManager(db_type=constant.DB_TYPE['AWS'],
+  access_key=access_key,
+  secret_key=secret_key,
+  buckets=[{
+    'bucket': 'bucket_name',
+    'blobs': {
+      'files': ['file_name'],
+      'folders': ['folder_name']
+    }
+  }]
+)
+
 # For APM
 manager = DBManager(db_type=constant.DB_TYPE['APM'],
   username=username,  # sso username
