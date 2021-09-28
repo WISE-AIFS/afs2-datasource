@@ -13,12 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License. 
 
-import os
 import re
 import json
-import afs2datasource.constant as const
 import afs2datasource.utils as utils
-from pymongo import MongoClient, errors
+from afs2datasource.helper import Helper
+from pymongo import MongoClient
 import pandas as pd
 
 ISODATE_PREFIX = 'afs-isotime-'
@@ -34,7 +33,7 @@ def ISODateDecoder(dic):
       dic[key] = value
   return dic
 
-class MongoHelper():
+class MongoHelper(Helper):
   def __init__(self, dataDir):
     self._connection = None
     data = utils.get_data_from_dataDir(dataDir)

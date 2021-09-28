@@ -13,14 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License. 
 
-import os
-import json
-import afs2datasource.constant as const
+from afs2datasource.helper import Helper
 import afs2datasource.utils as utils
 from influxdb import InfluxDBClient
 import pandas as pd
 
-class InfluxHelper():
+class InfluxHelper(Helper):
   def __init__(self, dataDir):
     self._connection = None
     data = utils.get_data_from_dataDir(dataDir)
@@ -29,6 +27,7 @@ class InfluxHelper():
   async def connect(self):
     if self._connection is None:
       self._connection = InfluxDBClient(database=self.database, username=self.username, password=self.password, host=self.host, port=self.port)
+      self._connection.get_list_database()
   
   def disconnect(self):
     if self._connection:

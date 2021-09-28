@@ -30,7 +30,7 @@ BLOBNOTFOUND = 'BlobNotFound'
 TOTAL_FILES_COUNT = 0
 
 
-class azureBlobHelper():
+class AzureBlobHelper():
     def __init__(self, dataDir):
         self._connection = None
         data = utils.get_data_from_dataDir(dataDir)

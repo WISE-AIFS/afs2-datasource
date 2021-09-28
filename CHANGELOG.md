@@ -1,8 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.7.1] - Unreleased
+## [3.7.0] - Unreleased
 ### Added
+- #19554 - DataHub support InfluxDB
 - #20401 - MySql Helper
 - #20773 - S3 helper support AWS S3
 
