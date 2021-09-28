@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.7.0] - Unreleased
+## [3.7.0] - 2021-09-28
 ### Added
 - #19554 - DataHub support InfluxDB
 - #20401 - MySql Helper
