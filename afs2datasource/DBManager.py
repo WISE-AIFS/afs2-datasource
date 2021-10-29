@@ -111,7 +111,7 @@ class DBManager:
           'datahub_config': config.get('datahub_config'),
           'datahub_url': config.get('datahub_url'),
           'credential': {
-            'uri': config.get('uri'),
+            'uri': config.get('uri', ''),
           },
           'username': config.get('username'),
           'password': config.get('password'),

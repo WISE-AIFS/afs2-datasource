@@ -110,9 +110,9 @@ def get_datahub_credential_from_dataDir(data):
   
   mongo_url, influx_url = None, None
 
-  if uri.startswith('mongodb://'):
+  if uri and uri.startswith('mongodb://'):
     mongo_url = uri
-  elif uri.startswith('influxdb://'):
+  elif uri and uri.startswith('influxdb://'):
     influx_url = uri
 
   if not mongo_url and not influx_url:
