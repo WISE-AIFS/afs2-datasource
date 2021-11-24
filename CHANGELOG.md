@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.8.0] - Unrelease
+### Added
+- #22412 - OracleDB Helper
+
 ## [3.7.1] - 2021-10-29
 ### Fixed
 - Datahub uri none type error

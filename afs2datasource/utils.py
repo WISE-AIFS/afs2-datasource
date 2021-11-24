@@ -15,6 +15,7 @@
 
 import re
 import json
+from afs2datasource.constant import DB_TYPE
 
 def get_data_from_dataDir(dataDir):
   if type(dataDir) is str:
@@ -44,23 +45,31 @@ def get_credential_from_dataDir(data):
       raise AttributeError('No externalUrl in dataDir[data]')
     return get_credential_from_uri(uri)
 
-def get_credential(credential):
-  username = credential.get('username', None)
-  password = credential.get('password', None)
-  host = credential.get('host', None)
-  port = credential.get('port', None)
-  database = credential.get('database', None)
-  if username is None:
+def get_credential(credential, type=None):
+  username = credential.get('username')
+  password = credential.get('password')
+  host = credential.get('host')
+  port = credential.get('port')
+  database = credential.get('database')
+  dsn = credential.get('dsn')
+
+  if not username:
     raise AttributeError('No username in credential')
-  if password is None:
+  if not password:
     raise AttributeError('No password in credential')
-  if host is None:
+  if not host:
     raise AttributeError('No host in credential')
-  if port is None:
+  if not port:
     raise AttributeError('No port in credential')
-  if database is None:
-    raise AttributeError('No database in credential')
   # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
+
+  if type in [DB_TYPE['ORACLEDB']]:
+    if not dsn:
+      raise AttributeError('No dsn in credential')
+    return username, password, host, port, dsn
+
+  if not database:
+    raise AttributeError('No database in credential')
   return username, password, host, port, database
 
 def get_s3_credential(data):

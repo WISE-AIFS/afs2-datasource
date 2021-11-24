@@ -98,6 +98,16 @@ manager = DBManager(db_type=constant.DB_TYPE['INFLUXDB'],
   querySql="select {field_key} from {measurement_name}"
 )
 
+# For Oracle Database
+manager = DBManagerdb_type=constant.DB_TYPE['ORACLEDB'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  dsn=dsb,
+  querySql="select {field_key} from {measurement_name}" # only support `SELECT`
+)
+
 # For S3
 manager = DBManager(db_type=constant.DB_TYPE['S3'],
   endpoint=endpoint,
@@ -230,6 +240,12 @@ Return query in the config.
 ```python
 manager.get_query()
 
+# MySQL, Oracle Database
+# Return type: String
+"""
+select {field} from {table} {condition}
+"""
+
 # PostgreSQL
 # Return type: String
 """
@@ -321,7 +337,7 @@ Return dataframe of list which  of `Machine` and `Parameter` in `timeRange` or `
 Return dataframe of list which  of `Tag` in `timeRange` or `timeLast` from DataHub.
 
 ```python
-# For MySQL, Postgres, MongoDB, InfluxDB, APM and DataHub
+# For MySQL, Postgres, MongoDB, InfluxDB, Oracle Database, APM and DataHub
 df = manager.execute_query()
 # Return type: DataFrame
 """
@@ -751,4 +767,44 @@ file_file=azure_file)
 # Delete Container
 is_success = manager.delete_table(table_name=container_name)
 # Return type: Boolean
+```
+
+## Oracle Example
+### Notice
+- Install OracleDB client Documents
+  - https://www.oracle.com/au/database/technologies/instant-client/linux-x86-64-downloads.html#ic_x64_inst
+
+
+```python
+from afs2datasource import DBManager, constant
+
+# Init DBManager
+manager = DBManager(
+  db_type=constant.DB_TYPE['ORACLEDB'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  dsn=dsb,
+  querySql="select {field_key} from {measurement_name}" # only support `SELECT`
+)
+
+# Connect OracleDB
+manager.connect()
+
+# Check is the container is exist
+table_name = 'table'
+manager.is_table_exist(table_name=table_name)
+# Return type: boolean
+
+# Execute querySql in DB config
+data = manager.execute_query()
+# Return type: DataFrame
+"""
+      index  survived   age   embarked
+0         0         1   22.0       7.0
+1         1         1    2.0       0.0
+2         2         0   26.0       7.0
+...
+"""
 ```

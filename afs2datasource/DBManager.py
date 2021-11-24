@@ -118,13 +118,14 @@ class DBManager:
         }
       }
     else:
-      username = config.get('username', None)
-      password = config.get('password', None)
-      host = config.get('host', None)
-      port = config.get('port', None)
-      database = config.get('database', None)
-      querySql = config.get('querySql', None)
-      collection = config.get('collection', None)
+      username = config.get('username')
+      password = config.get('password')
+      host = config.get('host')
+      port = config.get('port')
+      dsn = config.get('dsn')
+      database = config.get('database')
+      querySql = config.get('querySql')
+      collection = config.get('collection')
       dataDir = {
         'type': db_type,
         'data': {
@@ -135,6 +136,7 @@ class DBManager:
             'password': password,
             'host': host,
             'port': port,
+            'dsn': dsn,
             'database': database
           }
         }
@@ -165,6 +167,8 @@ class DBManager:
     elif db_type == const.DB_TYPE['INFLUXDB']:
       from afs2datasource.influxHelper import InfluxHelper
       return InfluxHelper(self.dataDir)
+    elif db_type == const.DB_TYPE['ORACLEDB']:
+      from afs2datasource.oracleDBHepler import OracleDBHelper as Helper
     elif db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
       from afs2datasource.s3Helper import s3Helper
       credential = get_data_from_dataDir(self.dataDir)
@@ -180,6 +184,9 @@ class DBManager:
       return DataHubHelper(self.dataDir)
     else:
       raise ValueError('{} not support db_type'.format(db_type))
+
+    credentail = get_data_from_dataDir(self.dataDir)
+    return Helper(credentail)
 
   def connect(self):
     try:
