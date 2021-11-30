@@ -30,4 +30,5 @@ DB_TYPE = {
   'AWS': 'aws-firehose',
   'APM': 'apm-firehose',
   'DATAHUB': 'datahub-firehose',
+  'SQLSERVER': 'sqlserver-firehose',
 }

@@ -68,6 +68,16 @@ manager = DBManager(db_type=constant.DB_TYPE['MYSQL'],
 )
 
 # For PostgreSQL
+manager = DBManager(db_type=constant.DB_TYPE['SQLSERVER'],
+  username=username,
+  password=password,
+  host=host,
+  port=port,
+  database=database,
+  querySql="select {field} from {table}"
+)
+
+# For PostgreSQL
 manager = DBManager(db_type=constant.DB_TYPE['POSTGRES'],
   username=username,
   password=password,

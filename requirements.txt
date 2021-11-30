@@ -8,3 +8,5 @@ motor==2.0.0
 azure-storage-blob==2.0.1
 mysql-connector-python>= 8.0.26
 cx-Oracle
+sqlalchemy==1.4.27
+pyodbc==4.0.32

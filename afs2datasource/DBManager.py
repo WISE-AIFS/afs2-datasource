@@ -155,10 +155,10 @@ class DBManager:
   def _create_helper(self, db_type):
     db_type = db_type.lower()
     if db_type in [const.DB_TYPE['MYSQL']]:
-      from afs2datasource.mysqlHelper import mysqlHelper
-      credentail = get_data_from_dataDir(self.dataDir)
-      return mysqlHelper(credentail)
-    if db_type == const.DB_TYPE['MONGODB']:
+      from afs2datasource.mysqlHelper import mysqlHelper as Helper
+    elif db_type == const.DB_TYPE['SQLSERVER']:
+      from afs2datasource.sqlServerHelper import SQLServerHelper as Helper
+    elif db_type == const.DB_TYPE['MONGODB']:
       from afs2datasource.mongoHelper import MongoHelper
       return MongoHelper(self.dataDir)
     elif db_type == const.DB_TYPE['POSTGRES']:
