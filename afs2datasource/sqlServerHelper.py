@@ -42,7 +42,7 @@ class SQLServerHelper(Helper):
   
   def disconnect(self):
     if self._connection:
-      self._connection.close()
+      self._connection.dispose()
       self._connection = None
 
   async def execute_query(self, querySql):
@@ -59,6 +59,7 @@ class SQLServerHelper(Helper):
 
   def is_table_exist(self, table_name):
     rows = self._connection.execute("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{}'".format(table_name))
+    rows = list(rows)
     return len(rows) > 0
 
 

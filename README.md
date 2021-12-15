@@ -67,14 +67,14 @@ manager = DBManager(db_type=constant.DB_TYPE['MYSQL'],
   querySql="select {field} from {table}"
 )
 
-# For PostgreSQL
+# For SQLServer
 manager = DBManager(db_type=constant.DB_TYPE['SQLSERVER'],
   username=username,
   password=password,
   host=host,
   port=port,
   database=database,
-  querySql="select {field} from {table}"
+  querySql="select {field} from {table}"  # only support `SELECT`
 )
 
 # For PostgreSQL
@@ -114,7 +114,7 @@ manager = DBManagerdb_type=constant.DB_TYPE['ORACLEDB'],
   password=password,
   host=host,
   port=port,
-  dsn=dsb,
+  database=database,
   querySql="select {field_key} from {measurement_name}" # only support `SELECT`
 )
 
@@ -201,10 +201,10 @@ manager = DBManager(db_type=constant.DB_TYPE['DATAHUB'],
 )
 ```
 ##### How to get APM machine id and parameters
-![Alt text](apm_document.jpg)
+![](https://github.com/stacy0416/afs2-datasource/blob/master/apm_document.jpg?raw=true)
 
 ##### How to get DataHub project id, node id, device id and tag
-![Alt text](datahub.gif)
+![](https://github.com/stacy0416/afs2-datasource/blob/master/datahub.gif?raw=true)
 
 ----
 <a name="connect"></a>

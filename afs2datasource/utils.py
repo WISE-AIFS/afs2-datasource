@@ -45,13 +45,12 @@ def get_credential_from_dataDir(data):
       raise AttributeError('No externalUrl in dataDir[data]')
     return get_credential_from_uri(uri)
 
-def get_credential(credential, type=None):
+def get_credential(credential):
   username = credential.get('username')
   password = credential.get('password')
   host = credential.get('host')
   port = credential.get('port')
   database = credential.get('database')
-  dsn = credential.get('dsn')
 
   if not username:
     raise AttributeError('No username in credential')
@@ -62,11 +61,6 @@ def get_credential(credential, type=None):
   if not port:
     raise AttributeError('No port in credential')
   # print('username: {0}\npassword: {1}\nhost: {2}\nport: {3}\ndatabase: {4}'.format(username, password, host, port, database))
-
-  if type in [DB_TYPE['ORACLEDB']]:
-    if not dsn:
-      raise AttributeError('No dsn in credential')
-    return username, password, host, port, dsn
 
   if not database:
     raise AttributeError('No database in credential')

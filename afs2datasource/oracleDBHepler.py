@@ -24,7 +24,7 @@ class OracleDBHelper(Helper):
   def __init__(self, datadir):
     self._connection = None
     credential = datadir.get('credential')
-    self._username, self._password, self._host, self._port, self._dsn = get_credential(credential, type=DB_TYPE['ORACLEDB'])
+    self._username, self._password, self._host, self._port, self._dsn = get_credential(credential)
 
     # if needed, place an 'r' before any parameter in order to address special characters such as '\'.
     self._tns = cx_Oracle.makedsn(
@@ -42,8 +42,6 @@ class OracleDBHelper(Helper):
 
       cursor = self._connection.cursor()
       cursor.execute("SELECT table_name FROM user_tables")
-      for c in cursor:
-        print(c)
 
   
   def disconnect(self):

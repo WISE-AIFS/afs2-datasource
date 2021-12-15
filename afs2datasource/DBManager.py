@@ -122,7 +122,6 @@ class DBManager:
       password = config.get('password')
       host = config.get('host')
       port = config.get('port')
-      dsn = config.get('dsn')
       database = config.get('database')
       querySql = config.get('querySql')
       collection = config.get('collection')
@@ -136,7 +135,6 @@ class DBManager:
             'password': password,
             'host': host,
             'port': port,
-            'dsn': dsn,
             'database': database
           }
         }
