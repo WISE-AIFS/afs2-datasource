@@ -1,9 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.8.0] - Unrelease
+## [3.8.0] - 2012-12-28
 ### Added
 - #22412 - OracleDB Helper
+- #22413 - SQLServer Helper
 
 ## [3.7.1] - 2021-10-29
 ### Fixed
