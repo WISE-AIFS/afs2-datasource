@@ -95,7 +95,7 @@ manager = DBManager(db_type=constant.DB_TYPE['MONGODB'],
   port=port,
   database=database,
   collection=collection,
-  querySql="{"{key}": {value}}"
+  querySql="{}"
 )
 
 # For InfluxDB
