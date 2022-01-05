@@ -25,7 +25,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - S3 Return fixed bucket order
 
-## [3.7.1] - 2021-11-25
+## [3.7.2] - Unreleased
+### Fixed
+- S3 Return fixed bucket order
+
+## [3.7.1] - 2021-10-29
 ### Fixed
 - Datahub uri none type error
 
