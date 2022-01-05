@@ -67,7 +67,10 @@ class s3Helper(Helper):
                 return df
             except Exception as e:
                 pass
-        return list(set([file_obj['bucket'] for file_obj in file_list]))
+
+        buckets = list(set([file_obj['bucket'] for file_obj in file_list]))
+        resp = list(filter(lambda query: query in buckets, list(map(lambda query: query['bucket'], query_list))))
+        return resp
 
     async def _download_file(self, file):
         global TOTAL_FILES_COUNT, TOTAL_DOWNLOAD_FILES

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.7.2] - Unreleased
+### Fixed
+- S3 Return fixed bucket order
+
 ## [3.7.1] - Unreleased
 ### Added
 - #20401 - MySql Helper
