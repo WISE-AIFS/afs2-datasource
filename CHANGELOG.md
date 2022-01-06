@@ -1,31 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.8.2] - 2022-06-15
-### Remove
-- Azure Blob not support `is_file_exist` function
-
-## [3.8.1] - 2022-06-08
-### Changed
-- Merge 3.7.2 & 3.7.3
-
-## [3.8.0] - 2021-12-28
-### Added
-- #22412 - OracleDB Helper
-- #22413 - SQLServer Helper
-## [3.7.3] - Unreleased
+## [3.7.3] - 2022-01-06
 ### Fixed
 - DBManager no event loop is running error
 
-## [3.7.2] - Unreleased
+## [3.7.2] - 2022-01-05
 ### Fixed
 - S3 Return fixed bucket order
 
-## [3.7.1] - 2021-10-29
-### Fixed
-- Datahub uri none type error
-
-## [3.7.0] - 2021-09-28
+## [3.7.1] - 2021-11-25
 ### Added
 - #19554 - DataHub support InfluxDB
 - #20401 - MySql Helper
