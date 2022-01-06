@@ -1,15 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.7.3] - Unreleased
+## [3.7.3] - 2022-01-06
 ### Fixed
 - DBManager no event loop is running error
 
-## [3.7.2] - Unreleased
+## [3.7.2] - 2022-01-05
 ### Fixed
 - S3 Return fixed bucket order
 
-## [3.7.1] - Unreleased
+## [3.7.1] - 2021-11-25
 ### Added
 - #20401 - MySql Helper
 - #20773 - S3 helper support AWS S3
