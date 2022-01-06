@@ -6,7 +6,15 @@ All notable changes to this project will be documented in this file.
 - #22412 - OracleDB Helper
 - #22413 - SQLServer Helper
 
-## [3.7.1] - 2021-10-29
+## [3.7.3] - 2022-01-06
+### Fixed
+- DBManager no event loop is running error
+
+## [3.7.2] - 2022-01-05
+### Fixed
+- S3 Return fixed bucket order
+
+## [3.7.1] - 2021-11-25
 ### Fixed
 - Datahub uri none type error
 

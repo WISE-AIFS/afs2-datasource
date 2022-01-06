@@ -42,7 +42,8 @@ class DBManager:
       raise ValueError('{0} is not support'.format(self._db_type))
     self._status = const.DB_STATUS['DISCONNECTED']
     self._helper = self._create_helper(self._db_type)
-    self.loop = asyncio.get_event_loop()
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(self.loop)
 
   def _get_credential_from_config(self, config):
     dataDir = {}
