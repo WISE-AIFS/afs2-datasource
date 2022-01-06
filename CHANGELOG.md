@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.7.3] - Unreleased
+### Fixed
+- DBManager no event loop is running error
+
 ## [3.7.2] - Unreleased
 ### Fixed
 - S3 Return fixed bucket order
