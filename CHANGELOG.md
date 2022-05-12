@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.7.4] - 2022-05-12
+### Fixed
+- Azure Blob download folder error
+
 ## [3.7.3] - 2022-01-06
 ### Fixed
 - DBManager no event loop is running error

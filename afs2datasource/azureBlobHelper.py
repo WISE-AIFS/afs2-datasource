@@ -86,10 +86,12 @@ class azureBlobHelper():
                     try:
                         blobs = self._connection.list_blobs(
                             container_name=container_name, prefix=folder)
+                        blobs = list(filter(lambda b: not b.name.endswith('/'), blobs))
                     except Exception as e:
                         raise Exception(e.error_code)
                     response += list(
                         map(lambda file: {'container': container_name, 'file': file.name}, blobs))
+        TOTAL_FILE_COUNT = len(response)
         print("Counting the download files: {}".format(
             TOTAL_FILE_COUNT), end='\r')
         return response
