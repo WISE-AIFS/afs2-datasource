@@ -150,6 +150,7 @@ class AzureBlobHelper():
             raise Exception(e.error_code)
 
     def is_file_exist(self, table_name, file_name):
+        raise NotImplementedError()
         try:
             response = self._connection.get_block_list(
                 container_name=table_name,

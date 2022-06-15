@@ -450,21 +450,14 @@ manager.is_table_exist(table_name=container_name)
 ----
 <a name="is_file_exist"></a>
 #### DBManager.is_file_exist(table_name, file_name)
-Return if the file exists in the bucket in S3.
-Return if the file exists in the container in Azure Blob.
+Return if the file exists in the bucket in S3 & AWS S3.
 
-Note this function only support S3 and Azure Blob.
+Note this function only support S3 and AWS S3.
 ```python
-# For S3
+# For S3 & AWS S3
 bucket_name = 'bucket'
 file_name = 'test.csv
 manager.is_file_exist(table_name=bucket_name, file_name=file_name)
-# Return: Boolean
-
-# For Azure Blob
-container_name = 'container'
-file_name = 'test.csv
-manager.is_file_exist(table_name=container_name, file_name=file_name)
 # Return: Boolean
 ```
 ----
