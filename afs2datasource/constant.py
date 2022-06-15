@@ -20,15 +20,10 @@ DB_STATUS = {
 }
 
 DB_TYPE = {
-  'MYSQL': 'mysql-firehose',
   'MONGODB': 'mongo-firehose',
   'POSTGRES': 'postgresql-firehose',
   'INFLUXDB': 'influxdb-firehose',
-  'ORACLEDB': 'oracledb-firehose',
   'S3': 's3-firehose',
   'AZUREBLOB': 'azure-firehose',
   'AWS': 'aws-firehose',
-  'APM': 'apm-firehose',
-  'DATAHUB': 'datahub-firehose',
-  'SQLSERVER': 'sqlserver-firehose',
 }
