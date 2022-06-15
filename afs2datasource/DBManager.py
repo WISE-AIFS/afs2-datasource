@@ -66,29 +66,6 @@ class DBManager:
           }
         }
       }
-    elif db_type == const.DB_TYPE['APM']:
-      username = config.get('username', None)
-      password = config.get('password', None)
-      password = base64.b64encode(password.encode('UTF-8')).decode('UTF-8')
-      apmUrl = config.get('apmUrl', None)
-      apm_config = config.get('apm_config', None)
-      mongouri = config.get('mongouri', None)
-      timeRange = config.get('timeRange', None)
-      timeLast = config.get('timeLast',None)
-      dataDir = {
-        'type': db_type,
-        'data': {
-          'username': username,
-          'password': password,
-          'apmUrl': apmUrl,
-          'timeRange': timeRange,
-          'timeLast': timeLast,
-          'apm_config': apm_config,
-          'credential': {
-            'uri': mongouri
-          }
-        }
-      }
     elif db_type == const.DB_TYPE['AZUREBLOB']:
       account_name = config.get('account_name', None)
       account_key = config.get('account_key', None)
@@ -101,21 +78,6 @@ class DBManager:
             'accountKey': account_key
           },
           'containers': containers
-        }
-      }
-    elif db_type == const.DB_TYPE['DATAHUB']:
-      dataDir = {
-        'type': db_type,
-        'data': {
-          'timeRange': config.get('timeRange'),
-          'timeLast': config.get('timeLast'),
-          'datahub_config': config.get('datahub_config'),
-          'datahub_url': config.get('datahub_url'),
-          'credential': {
-            'uri': config.get('uri', ''),
-          },
-          'username': config.get('username'),
-          'password': config.get('password'),
         }
       }
     else:
@@ -153,11 +115,7 @@ class DBManager:
 
   def _create_helper(self, db_type):
     db_type = db_type.lower()
-    if db_type in [const.DB_TYPE['MYSQL']]:
-      from afs2datasource.mysqlHelper import mysqlHelper as Helper
-    elif db_type == const.DB_TYPE['SQLSERVER']:
-      from afs2datasource.sqlServerHelper import SQLServerHelper as Helper
-    elif db_type == const.DB_TYPE['MONGODB']:
+    if db_type == const.DB_TYPE['MONGODB']:
       from afs2datasource.mongoHelper import MongoHelper
       return MongoHelper(self.dataDir)
     elif db_type == const.DB_TYPE['POSTGRES']:
@@ -166,26 +124,15 @@ class DBManager:
     elif db_type == const.DB_TYPE['INFLUXDB']:
       from afs2datasource.influxHelper import InfluxHelper
       return InfluxHelper(self.dataDir)
-    elif db_type == const.DB_TYPE['ORACLEDB']:
-      from afs2datasource.oracleDBHepler import OracleDBHelper as Helper
     elif db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
       from afs2datasource.s3Helper import s3Helper
       credential = get_data_from_dataDir(self.dataDir)
       return s3Helper(credential, db_type)
-    elif db_type == const.DB_TYPE['APM']:
-      from afs2datasource.apmDSHelper import APMDSHelper
-      return APMDSHelper(self.dataDir)
     elif db_type == const.DB_TYPE['AZUREBLOB']:
       from afs2datasource.azureBlobHelper import AzureBlobHelper
       return AzureBlobHelper(self.dataDir)
-    elif db_type == const.DB_TYPE['DATAHUB']:
-      from afs2datasource.dataHubHelper import DataHubHelper
-      return DataHubHelper(self.dataDir)
     else:
       raise ValueError('{} not support db_type'.format(db_type))
-
-    credentail = get_data_from_dataDir(self.dataDir)
-    return Helper(credentail)
 
   def connect(self):
     try:

@@ -17,16 +17,13 @@ import re
 import os
 import asyncio
 import logging
-import concurrent
 import pandas as pd
 import afs2datasource.utils as utils
-from azure.storage.blob import BlockBlobService
-from azure.common import AzureHttpError
+from azure.storage.blob import BlobServiceClient
 
 # disable azure blob sdk logger
 logging.getLogger('azure.storage').setLevel(logging.CRITICAL)
 
-BLOBNOTFOUND = 'BlobNotFound'
 TOTAL_FILES_COUNT = 0
 
 
@@ -39,11 +36,16 @@ class AzureBlobHelper():
 
     async def connect(self):
         if self._connection is None:
-            connection = BlockBlobService(
-                account_name=self.account_name, account_key=self.account_key)
+            connection = BlobServiceClient(
+                account_url="https://{}.blob.core.windows.net".format(self.account_name),
+                credential={
+                    "account_name": self.account_name,
+                    "account_key": self.account_key
+                }
+            )
             connection.list_containers()
             self._connection = connection
-
+    
     def disconnect(self):
         self._connection = None
 
@@ -51,6 +53,7 @@ class AzureBlobHelper():
         global TOTAL_FILE_COUNT
         TOTAL_FILE_COUNT = 0
         query_list = self._generate_download_list(query_list)
+        print("\n-------START DOWNLOAD FILES-------")
         await asyncio.gather(*[self._download_file(query) for query in query_list])
         if len(query_list) == 1 and query_list[0]['file'].endswith('.csv'):
             try:
@@ -68,6 +71,7 @@ class AzureBlobHelper():
         for query in query_list:
             blob = query['blobs']
             container_name = query['container']
+            client = self._connection.get_container_client(container_name)
             if 'files' in blob:
                 if not isinstance(blob['files'], (list, )):
                     if not blob['files']:
@@ -84,16 +88,10 @@ class AzureBlobHelper():
                         blob['folders'] = [blob['folders']]
                 for folder in blob['folders']:
                     try:
-                        blobs = self._connection.list_blobs(
-                            container_name=container_name, prefix=folder)
-                        blobs = list(filter(lambda b: not b.name.endswith('/'), blobs))
+                        blobs = client.list_blobs(name_starts_with=folder)
                     except Exception as e:
                         raise Exception(e.error_code)
-                    response += list(
-                        map(lambda file: {'container': container_name, 'file': file.name}, blobs))
-        TOTAL_FILE_COUNT = len(response)
-        print("Counting the download files: {}".format(
-            TOTAL_FILE_COUNT), end='\r')
+                    response += list(map(lambda file: {'container': container_name, 'file': file.name}, blobs))
         return response
 
     async def _download_file(self, file):
@@ -105,18 +103,18 @@ class AzureBlobHelper():
                 folder, _ = os.path.split('{}'.format(file_path))
                 if not os.path.exists(folder) or (os.path.exists(folder) and not os.path.isdir(folder)):
                     os.makedirs(folder)
-            self._connection.get_blob_to_path(
-                container_name=file['container'],
-                blob_name=file['file'],
-                file_path=file_path
-            )
-        except AzureHttpError as e:
-            if e.error_code == BLOBNOTFOUND:
-                raise Exception('File: {} is not exist'.format(file['file']))
-            else:
-                raise Exception(e.error_code)
+
+            client = self._connection.get_blob_client(file['container'], file['file'])
+            if not client.exists():
+                return
+            with open(file_path, 'wb') as download_file:
+                download_file.write(client.download_blob().readall())
+            
+            TOTAL_FILE_COUNT += 1
+            print("Already downloaded files: {}".format(
+                TOTAL_FILE_COUNT), end='\r')
         except Exception as e:
-            raise Exception(e)
+            print("\nDownload file {0} fail: {1}".format(file['file'], e))
 
     def _is_table_name_invalid(self, table_name):
         """
@@ -143,20 +141,22 @@ class AzureBlobHelper():
     def is_table_exist(self, table_name):
         # table_name is container name
         try:
-            container_list = [
-                container.name for container in self._connection.list_containers()]
-            return table_name in container_list
+            client = self._connection.get_container_client(table_name)
+            return client.exists()
         except Exception as e:
-            raise Exception(e.error_code)
+            error = ''
+            try:
+                if e.response.reason:
+                    error = e.response.reason
+            except:
+                error = str(e)
+            raise Exception(error)
 
     def is_file_exist(self, table_name, file_name):
         raise NotImplementedError()
         try:
-            response = self._connection.get_block_list(
-                container_name=table_name,
-                blob_name=file_name
-            )
-            return True
+            client = self._connection.get_blob_client(table_name, file_name)
+            return client.exists()
         except Exception as e:
             if int(e.status_code) == 404:
                 return False
@@ -174,11 +174,12 @@ class AzureBlobHelper():
 
     def insert(self, table_name, source, destination):
         try:
-            response = self._connection.create_blob_from_path(
-                container_name=table_name,
-                blob_name=destination,
-                file_path=source
-            )
+            client = self._connection.get_blob_client(table_name, destination)
+            
+            with open(source, 'rb') as data:
+                client.upload_blob(data)
+        except FileNotFoundError as e:
+            raise e
         except Exception as e:
             raise Exception(e.error_code)
 
@@ -189,4 +190,7 @@ class AzureBlobHelper():
             raise Exception(e.error_code)
 
     def delete_record(self, table_name, file_name):
-        self._connection.delete_blob(table_name, file_name)
+        client = self._connection.get_blob_client(table_name, file_name)
+        if not client.exists():
+            return
+        client.delete_blob()

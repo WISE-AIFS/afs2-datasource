@@ -7,7 +7,10 @@ except ImportError: # for pip <= 9.0.3
 
 requirements_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
 install_requires = parse_requirements(requirements_path, session='hack')
-install_requires = [str(ir.req) for ir in install_requires]
+try:
+    requirements = [str(ir.req) for ir in install_requires]
+except:
+    requirements = [str(ir.requirement) for ir in install_requires]
 
 with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as f:
   version = f.read()

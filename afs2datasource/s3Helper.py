@@ -85,7 +85,7 @@ class s3Helper(Helper):
             self._connection.download_file(
                 file['bucket'], file['file'], file_path)
             TOTAL_DOWNLOAD_FILES += 1
-            print("Already download files: {0}/{1}".format(
+            print("Already downloaded files: {0}/{1}".format(
                 TOTAL_DOWNLOAD_FILES, TOTAL_FILE_COUNT), end='\r')
         # except ClientError as e:
         #   raise Exception('{0}: {1}'.format(e.response['Error']['Code'], file['file']))
