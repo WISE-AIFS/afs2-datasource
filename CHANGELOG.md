@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - #22412 - OracleDB Helper
 - #22413 - SQLServer Helper
+## [3.7.4] - 2022-05-12
+### Fixed
+- Azure Blob download folder error
 
 ## [3.7.3] - 2022-01-06
 ### Fixed

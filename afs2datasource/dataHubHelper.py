@@ -40,8 +40,9 @@ class DataHubHelper(Helper):
         self._db = self._mongo_url.split('/')[-1]
       elif self._db_type == const.DB_TYPE['INFLUXDB']:
         username, password, host, port, database = utils.get_credential_from_uri(self._influx_url)
+        _conn = InfluxDBClient(database=database, username=username, password=password, host=host, port=port, timeout=5)
+        _conn.get_list_database()
         self._connection = InfluxDBClient(database=database, username=username, password=password, host=host, port=port)
-        self._connection.get_list_database()
 
   def disconnect(self):
     if self._connection:
