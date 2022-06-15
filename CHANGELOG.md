@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [3.8.2] - Unreleased
+## [3.8.2] - 2022-06-15
 ### Remove
 - Azure Blob not support `is_file_exist` function
 
