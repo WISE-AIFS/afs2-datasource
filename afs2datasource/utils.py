@@ -68,15 +68,15 @@ def get_credential(credential):
 
 def get_s3_credential(data):
   credential = data.get('credential', {})
-  endpoint = credential.get('endpoint', None)
-  access_key = credential.get('accessKey', None)
-  secret_key = credential.get('secretKey', None)
-  is_verify = credential.get('is_verify', False)
-  if not access_key:
-    raise AttributeError('No accessKey in credential')
-  if not secret_key:
-    raise AttributeError('No secretKey in credential')
-  return endpoint, access_key, secret_key, is_verify
+  keys = ['endpoint', 'accessKey', 'secretKey']
+  resp = []
+  for key in keys:
+    val = credential.get(key)
+    if not val:
+      raise AttributeError('No {} in credential'.format(key))
+    resp.append(val)
+  resp.append(credential.get('is_verify', False))
+  return tuple(resp)
 
 def get_azure_blob_credential(data):
   credential = data.get('credential', {})

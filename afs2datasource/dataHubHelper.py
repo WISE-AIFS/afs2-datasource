@@ -108,9 +108,10 @@ class DataHubHelper(Helper):
       )
       projection = { tag: 1 for tag in query['tags'] }
       projection.update({ '_id': 0, 'ts': 1 })
-      docs = self._connection[self._db][collection].find(sql, projection).sort('ts',ASCENDING)
+      docs = self._connection[self._db][collection].find(sql, projection)
       data = await docs.to_list(length=None)
       data = pd.DataFrame(data, columns=['ts'] + query['tags'])
+      data = data.sort_values(by=['ts'], ascending=True)
     else: # influx db
       measurement = 'HistRawData_{node_id}_{device_id}'.format(
         node_id=query['node_id'],

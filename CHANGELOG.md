@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [3.8.3] - Unreleased
+### Added
+- #28620 - Datahub with large dataset
+
 ## [3.8.2] - 2022-06-15
 ### Remove
 - Azure Blob not support `is_file_exist` function
