@@ -153,11 +153,12 @@ class DBManager:
 
   def _create_helper(self, db_type):
     db_type = db_type.lower()
-    if db_type in [const.DB_TYPE['MYSQL']]:
-      from afs2datasource.mysqlHelper import mysqlHelper as Helper
-    elif db_type == const.DB_TYPE['SQLSERVER']:
-      from afs2datasource.sqlServerHelper import SQLServerHelper as Helper
-    elif db_type == const.DB_TYPE['MONGODB']:
+    # if db_type in [const.DB_TYPE['MYSQL']]:
+    #   from afs2datasource.mysqlHelper import mysqlHelper as Helper
+    # elif db_type == const.DB_TYPE['SQLSERVER']:
+    #   from afs2datasource.sqlServerHelper import SQLServerHelper as Helper
+    # elif db_type == const.DB_TYPE['MONGODB']:
+    if db_type == const.DB_TYPE['MONGODB']:
       from afs2datasource.mongoHelper import MongoHelper
       return MongoHelper(self.dataDir)
     elif db_type == const.DB_TYPE['POSTGRES']:
@@ -166,21 +167,21 @@ class DBManager:
     elif db_type == const.DB_TYPE['INFLUXDB']:
       from afs2datasource.influxHelper import InfluxHelper
       return InfluxHelper(self.dataDir)
-    elif db_type == const.DB_TYPE['ORACLEDB']:
-      from afs2datasource.oracleDBHepler import OracleDBHelper as Helper
+    # elif db_type == const.DB_TYPE['ORACLEDB']:
+    #   from afs2datasource.oracleDBHepler import OracleDBHelper as Helper
     elif db_type in [const.DB_TYPE['S3'], const.DB_TYPE['AWS']]:
       from afs2datasource.s3Helper import s3Helper
       credential = get_data_from_dataDir(self.dataDir)
       return s3Helper(credential, db_type)
-    elif db_type == const.DB_TYPE['APM']:
-      from afs2datasource.apmDSHelper import APMDSHelper
-      return APMDSHelper(self.dataDir)
+    # elif db_type == const.DB_TYPE['APM']:
+    #   from afs2datasource.apmDSHelper import APMDSHelper
+    #   return APMDSHelper(self.dataDir)
     elif db_type == const.DB_TYPE['AZUREBLOB']:
       from afs2datasource.azureBlobHelper import AzureBlobHelper
       return AzureBlobHelper(self.dataDir)
-    elif db_type == const.DB_TYPE['DATAHUB']:
-      from afs2datasource.dataHubHelper import DataHubHelper
-      return DataHubHelper(self.dataDir)
+    # elif db_type == const.DB_TYPE['DATAHUB']:
+    #   from afs2datasource.dataHubHelper import DataHubHelper
+    #   return DataHubHelper(self.dataDir)
     else:
       raise ValueError('{} not support db_type'.format(db_type))
 

@@ -1,12 +1,12 @@
-pymongo==3.7.2
-pandas>=1.0.0, <2.0
-psycopg2-binary==2.8.1
-influxdb==5.2.2
-boto3<=1.17
-requests==2.22.0
-motor==2.0.0
+pymongo # ==3.7.2
+pandas # >=1.0.0, <2.0
+psycopg2-binary # ==2.8.1
+influxdb # ==5.2.2
+boto3 # <=1.17
+requests # ==2.22.0
+motor # ==2.0.0
 azure-storage-blob==2.0.1
-mysql-connector-python==8.0.26
-cx-Oracle==8.3.0
-sqlalchemy==1.4.27
-pyodbc==4.0.32
+# mysql-connector-python # ==8.0.26
+# cx-Oracle # ==8.3.0
+# sqlalchemy # ==1.4.27
+# pyodbc # ==4.0.32
